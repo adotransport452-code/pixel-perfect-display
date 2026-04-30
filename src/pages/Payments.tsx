@@ -162,7 +162,7 @@ const Payments = () => {
           <SF label="Search">
             <div className="relative">
               <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="eg. Search.." className="pl-7 h-9" />
+              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Consignment No, Track ID…" className="pl-7 h-9" />
             </div>
           </SF>
           <SF label="Status">
@@ -301,7 +301,17 @@ const Payments = () => {
                     <Input value={form.verifier} onChange={(e) => setForm({ ...form, verifier: e.target.value })} placeholder="Choose any verifier" />
                   </F>
                   <F label="Receipt">
-                    <label className="block cursor-pointer rounded-lg border-2 border-dashed border-primary/50 bg-background p-6 text-center text-sm hover:border-primary">
+                    <label
+                      className="block cursor-pointer rounded-lg border-2 border-dashed border-primary/50 bg-background p-6 text-center text-sm hover:border-primary"
+                      onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                      onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const f = e.dataTransfer.files?.[0];
+                        if (f) onUpload(f);
+                      }}
+                    >
                       {form.receipt_url ? (
                         <img src={form.receipt_url} alt="receipt" className="mx-auto max-h-32 rounded" />
                       ) : (
