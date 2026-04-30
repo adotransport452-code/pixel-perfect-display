@@ -1,11 +1,12 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { MapPin, Package, Truck, LayoutDashboard, Receipt, CreditCard, Users } from "lucide-react";
+import { MapPin, Package, Truck, LayoutDashboard, Receipt, CreditCard, Users, UserSquare2 } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { useAuth, type Permissions } from "@/contexts/AuthContext";
 
 const items: { title: string; url: string; icon: any; perm?: keyof Permissions; }[] = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, perm: "dashboard" },
   { title: "Stations", url: "/stations", icon: MapPin, perm: "settings" },
+  { title: "Clients", url: "/clients", icon: UserSquare2, perm: "settings" },
   { title: "Consignments", url: "/consignments", icon: Package, perm: "reports" },
   { title: "Shipments", url: "/shipments", icon: Truck, perm: "tracking" },
   { title: "Payments", url: "/payments", icon: CreditCard, perm: "billing" },

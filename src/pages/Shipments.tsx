@@ -265,6 +265,14 @@ const Shipments = () => {
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploadingImage}
+                      onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                      onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const f = e.dataTransfer.files?.[0];
+                        if (f) handleImageUpload(f);
+                      }}
                       className="flex h-40 w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-primary/40 bg-muted/30 text-sm text-muted-foreground transition-colors hover:bg-muted/50"
                     >
                       <Upload className="mb-2 h-6 w-6 text-primary" />

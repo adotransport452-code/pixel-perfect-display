@@ -10,6 +10,7 @@ import { AppLayout } from "@/components/AppLayout";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Stations from "./pages/Stations";
+import Clients from "./pages/Clients";
 import Consignments from "./pages/Consignments";
 import Shipments from "./pages/Shipments";
 import ShipmentDetails from "./pages/ShipmentDetails";
@@ -36,6 +37,7 @@ const App = () => (
                   <Routes>
                     <Route path="/" element={<AuthGate require="dashboard"><Index /></AuthGate>} />
                     <Route path="/stations" element={<AuthGate require="settings"><Stations /></AuthGate>} />
+                    <Route path="/clients" element={<AuthGate require="settings"><Clients /></AuthGate>} />
                     <Route path="/consignments" element={<AuthGate require="reports"><Consignments /></AuthGate>} />
                     <Route path="/shipments" element={<AuthGate require="tracking"><Shipments /></AuthGate>} />
                     <Route path="/shipments/:id" element={<AuthGate require="tracking"><ShipmentDetails /></AuthGate>} />
