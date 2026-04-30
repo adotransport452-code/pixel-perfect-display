@@ -230,6 +230,10 @@ function Arrow() {
   return <div className="self-center text-muted-foreground px-1">→</div>;
 }
 
+function FragmentItem({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
+}
+
 function TrailStep({ title, tone, done, lines }: {
   title: string; tone: "success" | "purple" | "primary" | "warning" | "destructive" | "muted"; done?: boolean; lines: string[];
 }) {
