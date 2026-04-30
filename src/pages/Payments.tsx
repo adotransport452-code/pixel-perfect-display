@@ -132,7 +132,10 @@ const Payments = () => {
   };
 
   const filtered = items.filter((p) => {
-    const hay = [p.id, p.verifier, p.initiated_by, p.remarks, ...(p.consignment_ids || [])].filter(Boolean).join(" ").toLowerCase();
+    const billNos = (p.consignment_ids || []).map((cid) => consMap.get(cid)?.bill_no).filter(Boolean) as string[];
+    const detailBills = (p.consignment_details || []).map((d) => d.bill_no).filter(Boolean);
+    const hay = [p.id, p.verifier, p.initiated_by, p.remarks, ...(p.consignment_ids || []), ...billNos, ...detailBills]
+      .filter(Boolean).join(" ").toLowerCase();
     if (search && !hay.includes(search.toLowerCase())) return false;
     if (fStatus && p.status !== fStatus) return false;
     const created = (p.created_at || "").slice(0, 10);
