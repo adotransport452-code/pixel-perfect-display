@@ -294,12 +294,42 @@ function OriginTable({ origin }: { origin: Origin }) {
                 <tr><td colSpan={29} className="px-4 py-12 text-center text-muted-foreground">No data found</td></tr>
               ) : filtered.map((r) => {
                 const remOrigin = calcRemainingOrigin(r);
+                const remLhasa = calcRemainingLhasa(r);
                 const remNylam = calcRemainingNylam(r);
                 const onWay = calcOnTheWay(r);
                 const missing = calcMissing(r);
-                const remLhasa = (Number(r.received_ctns_at_nylam) || 0) === 0
-                  ? (r.lhasa_containers || []).reduce((s, c) => s + (Number(c.loaded_ctn) || 0), 0) - 0
-                  : 0;
+                const isKerung = isKerungDestination(r.destination);
+                const rowText = isKerung ? "text-destructive" : "";
+                const patchRow = async (patch: Partial<OverallDetail>) => {
+                  setRows((rs) => rs.map((x) => x.id === r.id ? { ...x, ...patch } : x));
+                  try { await api.overallDetails.update(r.id, { ...patch, updated_by: userTag }); }
+                  catch (e: any) { toast.error(e.message || "Save failed"); load(); }
+                };
+                const patchLhasa = (i: number, p: Partial<LhasaContainer>) => {
+                  const arr = [...(r.lhasa_containers || [])]; arr[i] = { ...arr[i], ...p };
+                  patchRow({ lhasa_containers: arr });
+                };
+                const addLhasa = () => {
+                  const arr = [...(r.lhasa_containers || []), makeLhasaContainer()];
+                  patchRow({ lhasa_containers: arr, lhasa_total_containers: arr.length });
+                };
+                const removeLhasa = (i: number) => {
+                  const arr = (r.lhasa_containers || []).filter((_, j) => j !== i);
+                  patchRow({ lhasa_containers: arr, lhasa_total_containers: arr.length });
+                };
+                const patchDest = (key: "tatopani_containers" | "kerung_containers", i: number, p: Partial<DestContainer>) => {
+                  const arr = [...((r[key] as DestContainer[]) || [])]; arr[i] = { ...arr[i], ...p };
+                  patchRow({ [key]: arr } as any);
+                };
+                const addDest = (key: "tatopani_containers" | "kerung_containers", totalKey: "tatopani_total_containers" | "kerung_total_containers", defaultStatus: string) => {
+                  const arr = [...((r[key] as DestContainer[]) || []), { ...makeDestContainer(), status: defaultStatus }];
+                  patchRow({ [key]: arr, [totalKey]: arr.length } as any);
+                };
+                const removeDest = (key: "tatopani_containers" | "kerung_containers", totalKey: "tatopani_total_containers" | "kerung_total_containers", i: number) => {
+                  const arr = ((r[key] as DestContainer[]) || []).filter((_, j) => j !== i);
+                  patchRow({ [key]: arr, [totalKey]: arr.length } as any);
+                };
+                const cellCls = cn("px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 whitespace-nowrap align-top", rowText);
                 return (
                   <tr key={r.id} className="group hover:bg-accent/30">
                     {selectMode && (
@@ -307,93 +337,115 @@ function OriginTable({ origin }: { origin: Origin }) {
                         <Checkbox checked={selectedIds.includes(r.id)} onCheckedChange={() => toggleId(r.id)} />
                       </td>
                     )}
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 whitespace-nowrap">{r.date || "—"}</td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 whitespace-nowrap font-semibold sticky z-10" style={{ left: selectMode ? 40 : 0 }}>{r.consignment_no}</td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 whitespace-nowrap">{r.marka || "—"}</td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30">{r.total_ctns}</td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30">{r.loaded_ctns}</td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30">{r.cbm}</td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30">{r.gw}</td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 whitespace-nowrap">{r.destination || "—"}</td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 whitespace-nowrap">{r.lot_no || "—"}</td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 whitespace-nowrap">{r.dispatched_from_origin || "—"}</td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 whitespace-nowrap">{r.origin_container || "—"}</td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 whitespace-nowrap">
-                      <span className="inline-flex px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">{r.status}</span>
+                    <td className={cellCls}><Input type="date" value={r.date || ""} onChange={(e) => patchRow({ date: e.target.value || null })} className="h-7 text-xs w-[130px]" /></td>
+                    <td className={cn(cellCls, "font-semibold sticky z-10")} style={{ left: selectMode ? 40 : 0 }}>{r.consignment_no}</td>
+                    <td className={cellCls}><Input value={r.marka || ""} onChange={(e) => patchRow({ marka: e.target.value })} className="h-7 text-xs w-[100px]" /></td>
+                    <td className={cellCls}><Input type="number" value={r.total_ctns ?? 0} onChange={(e) => patchRow({ total_ctns: Number(e.target.value) })} className="h-7 text-xs w-[80px]" /></td>
+                    <td className={cellCls}><Input type="number" value={r.loaded_ctns ?? 0} onChange={(e) => patchRow({ loaded_ctns: Number(e.target.value) })} className="h-7 text-xs w-[80px]" /></td>
+                    <td className={cellCls}><Input type="number" step="0.01" value={r.cbm ?? 0} onChange={(e) => patchRow({ cbm: Number(e.target.value) })} className="h-7 text-xs w-[70px]" /></td>
+                    <td className={cellCls}><Input type="number" step="0.01" value={r.gw ?? 0} onChange={(e) => patchRow({ gw: Number(e.target.value) })} className="h-7 text-xs w-[70px]" /></td>
+                    <td className={cellCls}>
+                      <Select value={r.destination || ""} onValueChange={(v) => patchRow({ destination: v })}>
+                        <SelectTrigger className="h-7 text-xs w-[130px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>{DESTINATIONS.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                      </Select>
                     </td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30">{r.arrival_at_lhasa || "—"}</td>
-                    {/* LHASA expand */}
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30">
+                    <td className={cellCls}><Input value={r.lot_no || ""} onChange={(e) => patchRow({ lot_no: e.target.value })} className="h-7 text-xs w-[100px]" /></td>
+                    <td className={cellCls}><Input type="date" value={r.dispatched_from_origin || ""} onChange={(e) => patchRow({ dispatched_from_origin: e.target.value || null })} className="h-7 text-xs w-[140px]" /></td>
+                    <td className={cellCls}><Input value={r.origin_container || ""} onChange={(e) => patchRow({ origin_container: e.target.value })} className="h-7 text-xs w-[140px]" /></td>
+                    <td className={cellCls}>
+                      <Select value={r.status || ""} onValueChange={(v) => patchRow({ status: v })}>
+                        <SelectTrigger className="h-7 text-xs w-[160px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </td>
+                    <td className={cellCls}><Input type="date" value={r.arrival_at_lhasa || ""} onChange={(e) => patchRow({ arrival_at_lhasa: e.target.value || null })} className="h-7 text-xs w-[130px]" /></td>
+                    {/* LHASA expand & inline edit */}
+                    <td className={cn("px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 align-top", rowText)}>
                       <button onClick={() => toggleExpand(expandedLhasa, setExpandedLhasa, r.id)} className="inline-flex items-center gap-1 text-primary text-xs font-semibold">
                         {expandedLhasa.has(r.id) ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                        LHASA ({r.lhasa_total_containers || (r.lhasa_containers || []).length})
+                        LHASA ({(r.lhasa_containers || []).length})
                       </button>
                       {expandedLhasa.has(r.id) && (
-                        <div className="mt-2 p-2 rounded border border-border bg-muted/40 text-xs space-y-1 min-w-[260px]">
+                        <div className="mt-2 p-2 rounded border border-border bg-muted/40 text-xs space-y-2 min-w-[260px]">
                           {(r.lhasa_containers || []).map((c, i) => (
-                            <div key={i} className="border-b border-border/50 pb-1">
-                              <div><b>Container {i + 1}:</b> {c.container_name || "—"}</div>
-                              <div>Dispatched: {c.dispatched_from_lhasa || "—"} | Loaded: {c.loaded_ctn}</div>
-                              <div>Arrived Nylam: {c.arrived_at_nylam || "—"}</div>
+                            <div key={i} className="border-b border-border/50 pb-2 space-y-1">
+                              <div className="flex items-center justify-between">
+                                <b>Container {i + 1}</b>
+                                <button onClick={() => removeLhasa(i)} className="text-destructive"><X className="h-3 w-3" /></button>
+                              </div>
+                              <Input placeholder="Container name" value={c.container_name} onChange={(e) => patchLhasa(i, { container_name: e.target.value })} className="h-7 text-xs" />
+                              <Input type="date" value={c.dispatched_from_lhasa || ""} onChange={(e) => patchLhasa(i, { dispatched_from_lhasa: e.target.value || null })} className="h-7 text-xs" />
+                              <Input type="number" placeholder="Loaded CTN" value={c.loaded_ctn} onChange={(e) => patchLhasa(i, { loaded_ctn: Number(e.target.value) })} className="h-7 text-xs" />
+                              <Input type="date" value={c.arrived_at_nylam || ""} onChange={(e) => patchLhasa(i, { arrived_at_nylam: e.target.value || null })} className="h-7 text-xs" />
                             </div>
                           ))}
-                          {(!r.lhasa_containers || r.lhasa_containers.length === 0) && <div className="text-muted-foreground">No Lhasa containers</div>}
+                          <Button size="sm" variant="outline" className="w-full h-7 text-xs" onClick={addLhasa}><Plus className="h-3 w-3 mr-1" /> Add Lhasa Container</Button>
                         </div>
                       )}
                     </td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 whitespace-nowrap">{(r.nylam_arrival_dates || []).join(", ") || "—"}</td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30">{r.received_ctns_at_nylam}</td>
+                    <td className={cn("px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 align-top", rowText)}>
+                      <div className="space-y-1">
+                        {(r.nylam_arrival_dates || []).map((d, i) => (
+                          <div key={i} className="flex items-center gap-1">
+                            <Input type="date" value={d || ""} onChange={(e) => {
+                              const arr = [...(r.nylam_arrival_dates || [])]; arr[i] = e.target.value;
+                              patchRow({ nylam_arrival_dates: arr });
+                            }} className="h-7 text-xs w-[140px]" />
+                            <button onClick={() => patchRow({ nylam_arrival_dates: (r.nylam_arrival_dates || []).filter((_, j) => j !== i) })} className="text-destructive"><X className="h-3 w-3" /></button>
+                          </div>
+                        ))}
+                        <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => patchRow({ nylam_arrival_dates: [...(r.nylam_arrival_dates || []), ""] })}><Plus className="h-3 w-3" /></Button>
+                      </div>
+                    </td>
+                    <td className={cellCls}><Input type="number" value={r.received_ctns_at_nylam ?? 0} onChange={(e) => patchRow({ received_ctns_at_nylam: Number(e.target.value) })} className="h-7 text-xs w-[100px]" /></td>
                     {/* KERUNG expand */}
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30">
+                    <td className={cn("px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 align-top", rowText)}>
                       <button onClick={() => toggleExpand(expandedKer, setExpandedKer, r.id)} className="inline-flex items-center gap-1 text-destructive text-xs font-semibold">
                         {expandedKer.has(r.id) ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                        KERUNG ({r.kerung_total_containers || (r.kerung_containers || []).length})
+                        KERUNG ({(r.kerung_containers || []).length})
                       </button>
                       {expandedKer.has(r.id) && (
-                        <div className="mt-2 p-2 rounded border border-border bg-muted/40 text-xs space-y-1 min-w-[260px]">
+                        <div className="mt-2 p-2 rounded border border-border bg-muted/40 text-xs space-y-2 min-w-[280px]">
                           {(r.kerung_containers || []).map((c, i) => (
-                            <div key={i} className="border-b border-border/50 pb-1">
-                              <div><b>Container {i + 1}:</b> {c.nylam_container || "—"}</div>
-                              <div>Dispatched: {c.dispatched_from_nylam || "—"} | Loaded: {c.loaded_ctn}</div>
-                              <div>Status: {c.status} | Received: {c.received_ctn ?? "—"}</div>
-                              <div>Arrival: {c.arrival_date || "—"}</div>
-                            </div>
+                            <InlineDestEditor key={i} index={i} c={c} statuses={KERUNG_STATUSES}
+                              onChange={(p) => patchDest("kerung_containers", i, p)}
+                              onRemove={() => removeDest("kerung_containers", "kerung_total_containers", i)}
+                            />
                           ))}
-                          {(!r.kerung_containers || r.kerung_containers.length === 0) && <div className="text-muted-foreground">No Kerung containers</div>}
+                          <Button size="sm" variant="outline" className="w-full h-7 text-xs" onClick={() => addDest("kerung_containers", "kerung_total_containers", "On the way to Kerung")}><Plus className="h-3 w-3 mr-1" /> Add Kerung Container</Button>
                         </div>
                       )}
                     </td>
                     {/* TATOPANI expand */}
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30">
+                    <td className={cn("px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 align-top", rowText)}>
                       <button onClick={() => toggleExpand(expandedTat, setExpandedTat, r.id)} className="inline-flex items-center gap-1 text-warning text-xs font-semibold">
                         {expandedTat.has(r.id) ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                        TATOPANI ({r.tatopani_total_containers || (r.tatopani_containers || []).length})
+                        TATOPANI ({(r.tatopani_containers || []).length})
                       </button>
                       {expandedTat.has(r.id) && (
-                        <div className="mt-2 p-2 rounded border border-border bg-muted/40 text-xs space-y-1 min-w-[260px]">
+                        <div className="mt-2 p-2 rounded border border-border bg-muted/40 text-xs space-y-2 min-w-[280px]">
                           {(r.tatopani_containers || []).map((c, i) => (
-                            <div key={i} className="border-b border-border/50 pb-1">
-                              <div><b>Container {i + 1}:</b> {c.nylam_container || "—"}</div>
-                              <div>Dispatched: {c.dispatched_from_nylam || "—"} | Loaded: {c.loaded_ctn}</div>
-                              <div>Status: {c.status} | Received: {c.received_ctn ?? "—"}</div>
-                              <div>Arrival: {c.arrival_date || "—"}</div>
-                            </div>
+                            <InlineDestEditor key={i} index={i} c={c} statuses={TATOPANI_STATUSES}
+                              onChange={(p) => patchDest("tatopani_containers", i, p)}
+                              onRemove={() => removeDest("tatopani_containers", "tatopani_total_containers", i)}
+                            />
                           ))}
-                          {(!r.tatopani_containers || r.tatopani_containers.length === 0) && <div className="text-muted-foreground">No Tatopani containers</div>}
+                          <Button size="sm" variant="outline" className="w-full h-7 text-xs" onClick={() => addDest("tatopani_containers", "tatopani_total_containers", "On the way to Tatopani")}><Plus className="h-3 w-3 mr-1" /> Add Tatopani Container</Button>
                         </div>
                       )}
                     </td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-warning/10 group-hover:bg-warning/20 font-semibold text-warning-foreground">{remOrigin}</td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-warning/10 group-hover:bg-warning/20 font-semibold text-warning-foreground">{remLhasa}</td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-warning/10 group-hover:bg-warning/20 font-semibold text-warning-foreground">{remNylam}</td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-warning/10 group-hover:bg-warning/20 font-semibold text-warning-foreground">{onWay}</td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-destructive/10 group-hover:bg-destructive/20 font-semibold text-destructive">{missing}</td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 whitespace-nowrap">{r.client || "—"}</td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 max-w-xs truncate">{r.remarks || "—"}</td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 whitespace-nowrap">{r.created_by || "—"}</td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 whitespace-nowrap">{r.updated_by || "—"}</td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 whitespace-nowrap">{new Date(r.updated_at).toLocaleString()}</td>
-                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 sticky right-0 z-10">
+                    <td className={cn("px-3 py-2 border-t border-border/60 font-semibold whitespace-nowrap", remOrigin === null ? "bg-card group-hover:bg-accent/30 text-muted-foreground" : "bg-warning/10 group-hover:bg-warning/20", rowText)}>{fmtNum(remOrigin)}</td>
+                    <td className={cn("px-3 py-2 border-t border-border/60 font-semibold whitespace-nowrap", remLhasa === null ? "bg-card group-hover:bg-accent/30 text-muted-foreground" : "bg-warning/10 group-hover:bg-warning/20", rowText)}>{fmtNum(remLhasa)}</td>
+                    <td className={cn("px-3 py-2 border-t border-border/60 font-semibold whitespace-nowrap", remNylam === null ? "bg-card group-hover:bg-accent/30 text-muted-foreground" : "bg-warning/10 group-hover:bg-warning/20", rowText)}>{fmtNum(remNylam)}</td>
+                    <td className={cn("px-3 py-2 border-t border-border/60 font-semibold whitespace-nowrap", onWay === null ? "bg-card group-hover:bg-accent/30 text-muted-foreground" : "bg-warning/10 group-hover:bg-warning/20", rowText)}>{fmtNum(onWay)}</td>
+                    <td className={cn("px-3 py-2 border-t border-border/60 font-semibold whitespace-nowrap", missing === null ? "bg-card group-hover:bg-accent/30 text-muted-foreground" : "bg-destructive/10 group-hover:bg-destructive/20 text-destructive")}>{fmtNum(missing)}</td>
+                    <td className={cellCls}><Input value={r.client || ""} onChange={(e) => patchRow({ client: e.target.value })} className="h-7 text-xs w-[140px]" /></td>
+                    <td className={cn("px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 align-top", rowText)}><Input value={r.remarks || ""} onChange={(e) => patchRow({ remarks: e.target.value })} className="h-7 text-xs w-[180px]" /></td>
+                    <td className={cellCls}>{r.created_by || "—"}</td>
+                    <td className={cellCls}>{r.updated_by || "—"}</td>
+                    <td className={cellCls}>{new Date(r.updated_at).toLocaleString()}</td>
+                    <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 sticky right-0 z-10 align-top">
                       <ActionButtons
                         onView={() => setViewing(r)}
                         onEdit={() => { setEditing(r); setEditOpen(true); }}
