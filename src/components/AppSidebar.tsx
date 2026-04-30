@@ -12,6 +12,7 @@ const items: { title: string; url: string; icon: any; perm?: keyof Permissions; 
   { title: "Payments", url: "/payments", icon: CreditCard, perm: "billing" },
   { title: "Delivery Receipts", url: "/delivery-receipts", icon: Receipt, perm: "settings" },
   { title: "Overall Details", url: "/overall-details", icon: ClipboardList, perm: "tracking" },
+  { title: "Tracking System", url: "/tracking-system", icon: Radar, perm: "tracking" },
 ];
 
 export function AppSidebar() {
