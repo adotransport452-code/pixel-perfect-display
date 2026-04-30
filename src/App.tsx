@@ -18,6 +18,7 @@ import Payments from "./pages/Payments";
 import DeliveryReceipts from "./pages/DeliveryReceipts";
 import UsersAdmin from "./pages/UsersAdmin";
 import OverallDetails from "./pages/OverallDetails";
+import TrackingSystem from "./pages/TrackingSystem";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const App = () => (
                     <Route path="/payments" element={<AuthGate require="billing"><Payments /></AuthGate>} />
                     <Route path="/delivery-receipts" element={<AuthGate require="settings"><DeliveryReceipts /></AuthGate>} />
                     <Route path="/overall-details" element={<AuthGate require="tracking"><OverallDetails /></AuthGate>} />
+                    <Route path="/tracking-system" element={<AuthGate require="tracking"><TrackingSystem /></AuthGate>} />
                     <Route path="/admin/users" element={<AdminOnly><UsersAdmin /></AdminOnly>} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
