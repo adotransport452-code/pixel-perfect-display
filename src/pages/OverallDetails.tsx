@@ -27,25 +27,45 @@ const DESTINATIONS = ["TATOPANI", "KERUNG", "TATOPANI-KERUNG", "KERUNG-TATOPANI"
 const TATOPANI_STATUSES = ["On the way to Tatopani", "At Tatopani port"];
 const KERUNG_STATUSES = ["On the way to Kerung", "At Kerung port"];
 
-// ---------- Calculations ----------
-function calcRemainingOrigin(r: OverallDetail) { return Math.max(0, (r.total_ctns || 0) - (r.loaded_ctns || 0)); }
-function calcRemainingNylam(r: OverallDetail) {
+// ---------- Calculations (return null when input data not yet entered) ----------
+function calcRemainingOrigin(r: OverallDetail): number | null {
+  // Only fill if Loaded CTNs has been entered (>0)
+  if (!r.loaded_ctns || Number(r.loaded_ctns) <= 0) return null;
+  return Math.max(0, (Number(r.total_ctns) || 0) - (Number(r.loaded_ctns) || 0));
+}
+function calcRemainingLhasa(r: OverallDetail): number | null {
+  // Only fill if Received CTNS at Nylam has been entered (>0)
+  if (!r.received_ctns_at_nylam || Number(r.received_ctns_at_nylam) <= 0) return null;
+  const loadedLhasa = (r.lhasa_containers || []).reduce((s, c) => s + (Number(c.loaded_ctn) || 0), 0);
+  return loadedLhasa - Number(r.received_ctns_at_nylam);
+}
+function calcRemainingNylam(r: OverallDetail): number | null {
+  // Only fill if any Loaded CTN from Nylam to Tatopani/Kerung is filled
   const tat = (r.tatopani_containers || []).reduce((s, c) => s + (Number(c.loaded_ctn) || 0), 0);
   const ker = (r.kerung_containers || []).reduce((s, c) => s + (Number(c.loaded_ctn) || 0), 0);
+  if (tat <= 0 && ker <= 0) return null;
   return (Number(r.received_ctns_at_nylam) || 0) - tat - ker;
 }
-function calcOnTheWay(r: OverallDetail) {
-  let total = 0;
-  for (const c of r.tatopani_containers || []) if (c.status === "On the way to Tatopani") total += Number(c.loaded_ctn) || 0;
-  for (const c of r.kerung_containers || []) if (c.status === "On the way to Kerung") total += Number(c.loaded_ctn) || 0;
-  return total;
+function calcOnTheWay(r: OverallDetail): number | null {
+  // Only fill if any container has status "On the way to Tatopani/Kerung"
+  let total = 0; let any = false;
+  for (const c of r.tatopani_containers || []) if (c.status === "On the way to Tatopani") { total += Number(c.loaded_ctn) || 0; any = true; }
+  for (const c of r.kerung_containers || []) if (c.status === "On the way to Kerung") { total += Number(c.loaded_ctn) || 0; any = true; }
+  return any ? total : null;
 }
-function calcMissing(r: OverallDetail) {
-  let total = 0;
-  for (const c of r.tatopani_containers || []) if (c.status === "At Tatopani port") total += (Number(c.loaded_ctn) || 0) - (Number(c.received_ctn) || 0);
-  for (const c of r.kerung_containers || []) if (c.status === "At Kerung port") total += (Number(c.loaded_ctn) || 0) - (Number(c.received_ctn) || 0);
-  return total;
+function calcMissing(r: OverallDetail): number | null {
+  // Only fill if status is "At X port" AND received_ctn is filled
+  let total = 0; let any = false;
+  for (const c of r.tatopani_containers || []) if (c.status === "At Tatopani port" && c.received_ctn != null && c.received_ctn !== undefined) { total += (Number(c.loaded_ctn) || 0) - Number(c.received_ctn); any = true; }
+  for (const c of r.kerung_containers || []) if (c.status === "At Kerung port" && c.received_ctn != null && c.received_ctn !== undefined) { total += (Number(c.loaded_ctn) || 0) - Number(c.received_ctn); any = true; }
+  return any ? total : null;
 }
+function isKerungDestination(d: string | null | undefined): boolean {
+  if (!d) return false;
+  const u = d.toUpperCase().replace(/\s+/g, "");
+  return u.includes("KERUNG") || u.includes("KYIRONG") || u === "TATOPANI-KERUNG" || u === "KERUNG-TATOPANI";
+}
+const fmtNum = (n: number | null) => (n === null || n === undefined || Number.isNaN(n) ? "" : String(n));
 
 function emptyRow(origin: Origin): Partial<OverallDetail> {
   return {
