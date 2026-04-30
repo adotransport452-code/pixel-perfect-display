@@ -37,7 +37,7 @@ const ShipmentDetails = () => {
     try {
       const all = await api.shipments.list();
       const s = all.find((x) => x.id === id);
-      if (!s) { toast.error("Shipment not found"); navigate({ to: "/shipments" }); return; }
+      if (!s) { toast.error("Shipment not found"); navigate("/shipments"); return; }
       setShipment(s);
       const cons = await api.consignments.list();
       setConsignments(cons.filter((c) => s.consignment_ids.includes(c.id)));
@@ -115,7 +115,7 @@ const ShipmentDetails = () => {
         title={`Shipment: ${shipment.lot_no}`}
         breadcrumbs={[{ label: "Home" }, { label: "Shipments" }, { label: shipment.lot_no }]}
         actions={
-          <Button variant="outline" onClick={() => navigate({ to: "/shipments" })}><ArrowLeft className="mr-1 h-4 w-4" />Back</Button>
+          <Button variant="outline" onClick={() => navigate("/shipments")}><ArrowLeft className="mr-1 h-4 w-4" />Back</Button>
         }
       />
       <div className="p-6 space-y-5">
