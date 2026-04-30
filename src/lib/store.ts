@@ -38,6 +38,57 @@ export type Payment = {
   consignment_details: PaymentConsignmentDetail[];
   created_at: string; updated_at: string;
 };
+export type LhasaContainer = {
+  container_name: string;
+  dispatched_from_lhasa: string | null; // YYYY-MM-DD
+  loaded_ctn: number;
+  arrived_at_nylam: string | null;
+};
+export type DestContainer = {
+  dispatched_from_nylam: string | null;
+  loaded_ctn: number;
+  nylam_container: string;
+  status: string; // On the way to X | At X port
+  received_ctn: number | null;
+  arrival_date: string | null;
+};
+export type OverallStatus =
+  | "On the way to Lhasa" | "At Lhasa" | "On the way to Nylam" | "At Nylam"
+  | "On the way to Tatopani" | "At Tatopani port" | "On the way to Kerung" | "At Kerung port"
+  | "Tatopani Delivered" | "Kerung Delivered";
+
+export type OverallDetail = {
+  id: string;
+  origin: "Guangzhou" | "Yiwu";
+  date: string | null;
+  consignment_no: string;
+  marka: string | null;
+  total_ctns: number;
+  loaded_ctns: number;
+  cbm: number;
+  gw: number;
+  destination: string | null;
+  lot_no: string | null;
+  dispatched_from_origin: string | null;
+  origin_container: string | null;
+  status: OverallStatus | string;
+  arrival_at_lhasa: string | null;
+  lhasa_containers: LhasaContainer[];
+  lhasa_total_containers: number;
+  nylam_arrival_dates: string[];
+  received_ctns_at_nylam: number;
+  tatopani_containers: DestContainer[];
+  tatopani_total_containers: number;
+  kerung_containers: DestContainer[];
+  kerung_total_containers: number;
+  client: string | null;
+  remarks: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type DeliveryReceipt = {
   id: string; consignment_ids: string[];
   client_name: string; client_phone: string; client_email: string | null;
