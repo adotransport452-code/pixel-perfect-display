@@ -16,7 +16,7 @@ import { exportToExcel } from "@/lib/excel";
 import { api, Shipment, Consignment } from "@/lib/store";
 
 const ShipmentDetails = () => {
-  const { id } = getRouteApi("/shipments/$id").useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [shipment, setShipment] = useState<Shipment | null>(null);
   const [consignments, setConsignments] = useState<Consignment[]>([]);

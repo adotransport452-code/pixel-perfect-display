@@ -219,7 +219,7 @@ const Shipments = () => {
             { key: "created_at", header: "Created At", render: (r) => (
               <div className="text-sm"><div className="font-semibold">{fmtDate(r.created_at)}</div><div className="text-primary">{fmtTime(r.created_at)}</div></div>
             ) },
-            { key: "actions", header: "Actions", render: (r) => <ActionButtons onView={() => navigate({ to: "/shipments/$id", params: { id: r.id } })} onEdit={() => openEdit(r)} onDelete={() => remove(r)} /> },
+            { key: "actions", header: "Actions", render: (r) => <ActionButtons onView={() => navigate(`/shipments/${r.id}`)} onEdit={() => openEdit(r)} onDelete={() => remove(r)} /> },
           ]}
         />
       </div>
