@@ -17,6 +17,7 @@ import ShipmentDetails from "./pages/ShipmentDetails";
 import Payments from "./pages/Payments";
 import DeliveryReceipts from "./pages/DeliveryReceipts";
 import UsersAdmin from "./pages/UsersAdmin";
+import OverallDetails from "./pages/OverallDetails";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
