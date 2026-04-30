@@ -30,14 +30,14 @@ export default function TrackingSystem() {
   };
   useEffect(() => { load(); }, []);
 
+  const trimmed = q.trim().toLowerCase();
   const filtered = useMemo(() => {
-    const s = q.trim().toLowerCase();
-    if (!s) return rows;
+    if (!trimmed) return [];
     return rows.filter((r) =>
       [r.consignment_no, r.marka, r.lot_no, r.client, r.destination, r.origin_container, r.status]
-        .filter(Boolean).some((v) => String(v).toLowerCase().includes(s))
+        .filter(Boolean).some((v) => String(v).toLowerCase().includes(trimmed))
     );
-  }, [rows, q]);
+  }, [rows, trimmed]);
 
   return (
     <div>
@@ -48,19 +48,28 @@ export default function TrackingSystem() {
           <Input placeholder="Search Consignment No., MARKA, LOT, client, container…" value={q} onChange={(e) => setQ(e.target.value)} className="pl-8" />
         </div>
 
-        <div className="text-sm text-muted-foreground">
-          <Package className="inline h-4 w-4 mr-1" />
-          Consignment Details ({filtered.length})
-        </div>
-
-        {loading ? (
-          <div className="text-center py-12 text-muted-foreground">Loading…</div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">No consignments found</div>
-        ) : (
-          <div className="space-y-6">
-            {filtered.map((r) => <TrackingCard key={r.id} r={r} />)}
+        {!trimmed ? (
+          <div className="text-center py-20 text-muted-foreground border rounded-lg bg-muted/20">
+            <Search className="h-10 w-10 mx-auto mb-3 opacity-40" />
+            <div className="text-base font-medium">Search to track a consignment</div>
+            <div className="text-xs mt-1">Enter a Consignment No., MARKA, LOT, client or container above.</div>
           </div>
+        ) : (
+          <>
+            <div className="text-sm text-muted-foreground">
+              <Package className="inline h-4 w-4 mr-1" />
+              Consignment Details ({filtered.length})
+            </div>
+            {loading ? (
+              <div className="text-center py-12 text-muted-foreground">Loading…</div>
+            ) : filtered.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">No consignments found</div>
+            ) : (
+              <div className="space-y-6">
+                {filtered.map((r) => <TrackingCard key={r.id} r={r} />)}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
