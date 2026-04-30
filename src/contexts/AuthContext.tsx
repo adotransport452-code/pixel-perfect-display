@@ -5,10 +5,20 @@ import { supabase } from "@/integrations/supabase/client";
 export type Role = "admin" | "staff" | "client";
 export type Permissions = {
   dashboard: boolean;
+  // legacy grouped flags (still respected)
   tracking: boolean;
   reports: boolean;
   billing: boolean;
   settings: boolean;
+  // per-section flags
+  stations: boolean;
+  clients: boolean;
+  consignments: boolean;
+  shipments: boolean;
+  payments: boolean;
+  delivery_receipts: boolean;
+  overall_details: boolean;
+  tracking_system: boolean;
 };
 export type Profile = { user_id: string; name: string; email: string; disabled: boolean; };
 
