@@ -705,6 +705,29 @@ function DestContainerCard({ index, c, statuses, onChange }: { index: number; c:
   );
 }
 
+function InlineDestEditor({ index, c, statuses, onChange, onRemove }: {
+  index: number; c: DestContainer; statuses: string[];
+  onChange: (p: Partial<DestContainer>) => void; onRemove: () => void;
+}) {
+  return (
+    <div className="border-b border-border/50 pb-2 space-y-1">
+      <div className="flex items-center justify-between">
+        <b>Container {index + 1}</b>
+        <button onClick={onRemove} className="text-destructive"><X className="h-3 w-3" /></button>
+      </div>
+      <Input placeholder="Nylam Container" value={c.nylam_container} onChange={(e) => onChange({ nylam_container: e.target.value })} className="h-7 text-xs" />
+      <Input type="date" value={c.dispatched_from_nylam || ""} onChange={(e) => onChange({ dispatched_from_nylam: e.target.value || null })} className="h-7 text-xs" />
+      <Input type="number" placeholder="Loaded CTN" value={c.loaded_ctn} onChange={(e) => onChange({ loaded_ctn: Number(e.target.value) })} className="h-7 text-xs" />
+      <Select value={c.status} onValueChange={(v) => onChange({ status: v })}>
+        <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+        <SelectContent>{statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+      </Select>
+      <Input type="number" placeholder="Received CTN" value={c.received_ctn ?? ""} onChange={(e) => onChange({ received_ctn: e.target.value === "" ? null : Number(e.target.value) })} className="h-7 text-xs" />
+      <Input type="date" value={c.arrival_date || ""} onChange={(e) => onChange({ arrival_date: e.target.value || null })} className="h-7 text-xs" />
+    </div>
+  );
+}
+
 // ---------- Master Edit ----------
 function MasterEditDialog({ open, origin, ids, onClose, onDone }: {
   open: boolean; origin: Origin; ids: string[]; onClose: () => void; onDone: () => void;
