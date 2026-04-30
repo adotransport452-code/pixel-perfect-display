@@ -509,28 +509,52 @@ export type Database = {
       user_permissions: {
         Row: {
           billing: boolean
+          clients: boolean
+          consignments: boolean
           dashboard: boolean
+          delivery_receipts: boolean
+          overall_details: boolean
+          payments: boolean
           reports: boolean
           settings: boolean
+          shipments: boolean
+          stations: boolean
           tracking: boolean
+          tracking_system: boolean
           updated_at: string
           user_id: string
         }
         Insert: {
           billing?: boolean
+          clients?: boolean
+          consignments?: boolean
           dashboard?: boolean
+          delivery_receipts?: boolean
+          overall_details?: boolean
+          payments?: boolean
           reports?: boolean
           settings?: boolean
+          shipments?: boolean
+          stations?: boolean
           tracking?: boolean
+          tracking_system?: boolean
           updated_at?: string
           user_id: string
         }
         Update: {
           billing?: boolean
+          clients?: boolean
+          consignments?: boolean
           dashboard?: boolean
+          delivery_receipts?: boolean
+          overall_details?: boolean
+          payments?: boolean
           reports?: boolean
           settings?: boolean
+          shipments?: boolean
+          stations?: boolean
           tracking?: boolean
+          tracking_system?: boolean
           updated_at?: string
           user_id?: string
         }
