@@ -248,20 +248,23 @@ function OriginTable({ origin }: { origin: Origin }) {
                   ["Remaining CTN at Nylam", 150, "hl"], ["On the Way", 110, "hl"], ["Missing CTN", 110, "hl"],
                   ["Client", 160], ["Remarks", 180], ["Created By", 120], ["Updated By", 120], ["Last Modified", 150],
                   ["Actions", 130, "stickyR"],
-                ].map(([label, w, kind]: any) => (
-                  <th key={label}
-                    style={{ minWidth: w }}
-                    className={cn(
-                      "bg-gradient-primary px-3 py-2 font-bold text-[11px] uppercase tracking-wider text-primary-foreground border-b border-primary/30 whitespace-nowrap text-left",
-                      kind === "sticky" && "sticky z-40",
-                      kind === "stickyR" && "sticky right-0 z-40",
-                      kind === "hl" && "bg-warning/90"
-                    )}
-                    {...(kind === "sticky" ? { style: { left: selectMode ? 40 : 0, minWidth: w } } : {})}
-                  >
-                    {label}
-                  </th>
-                ))}
+                ].map(([label, w, kind]: any) => {
+                  const style: React.CSSProperties = { minWidth: w };
+                  if (kind === "sticky") style.left = selectMode ? 40 : 0;
+                  return (
+                    <th key={label}
+                      style={style}
+                      className={cn(
+                        "bg-gradient-primary px-3 py-2 font-bold text-[11px] uppercase tracking-wider text-primary-foreground border-b border-primary/30 whitespace-nowrap text-left",
+                        kind === "sticky" && "sticky z-40",
+                        kind === "stickyR" && "sticky right-0 z-40",
+                        kind === "hl" && "bg-warning/90"
+                      )}
+                    >
+                      {label}
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
             <tbody>
