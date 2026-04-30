@@ -18,6 +18,7 @@ import Payments from "./pages/Payments";
 import DeliveryReceipts from "./pages/DeliveryReceipts";
 import UsersAdmin from "./pages/UsersAdmin";
 import OverallDetails from "./pages/OverallDetails";
+import TrackingSystem from "./pages/TrackingSystem";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
