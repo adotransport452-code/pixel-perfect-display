@@ -44,6 +44,7 @@ const App = () => (
                     <Route path="/shipments/:id" element={<AuthGate require="tracking"><ShipmentDetails /></AuthGate>} />
                     <Route path="/payments" element={<AuthGate require="billing"><Payments /></AuthGate>} />
                     <Route path="/delivery-receipts" element={<AuthGate require="settings"><DeliveryReceipts /></AuthGate>} />
+                    <Route path="/overall-details" element={<AuthGate require="tracking"><OverallDetails /></AuthGate>} />
                     <Route path="/admin/users" element={<AdminOnly><UsersAdmin /></AdminOnly>} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
