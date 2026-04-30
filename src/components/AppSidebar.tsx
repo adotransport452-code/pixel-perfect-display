@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { MapPin, Package, Truck, LayoutDashboard, Receipt, CreditCard, Users, UserSquare2, ClipboardList } from "lucide-react";
+import { MapPin, Package, Truck, LayoutDashboard, Receipt, CreditCard, Users, UserSquare2, ClipboardList, Radar } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { useAuth, type Permissions } from "@/contexts/AuthContext";
 
