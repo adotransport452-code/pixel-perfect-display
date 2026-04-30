@@ -919,7 +919,6 @@ function ConsignmentDetailView({ r, origin }: { r: OverallDetail; origin: Origin
         <DetailTile icon="🛣️" label="On the Way" value={onWay === null ? "-" : String(onWay)} tone="blue" />
         <DetailTile icon="⚠️" label="Missing CTN" value={missing === null ? "0" : String(missing)} tone="red" />
         <DetailTile icon="📦" label="Remaining CTN at Nylam" value={remNylam === null ? "0" : String(remNylam)} tone="amber" />
-        <DetailTile icon="✅" label="Follow Up" value={r.follow_up ? "Done" : "Pending"} />
         <DetailTile icon="📝" label="Remarks" value={r.remarks || "-"} />
       </div>
 
