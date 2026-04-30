@@ -62,18 +62,21 @@ type Row = {
 
 const PERM_KEYS: { key: keyof Permissions; label: string }[] = [
   { key: "dashboard", label: "Dashboard" },
-  { key: "tracking", label: "Tracking (Shipments)" },
-  { key: "reports", label: "Reports (Consignments)" },
-  { key: "billing", label: "Billing (Payments)" },
-  { key: "settings", label: "Settings (Stations & Receipts)" },
+  { key: "stations", label: "Stations" },
+  { key: "clients", label: "Clients" },
+  { key: "consignments", label: "Consignments" },
+  { key: "shipments", label: "Shipments" },
+  { key: "payments", label: "Payments" },
+  { key: "delivery_receipts", label: "Delivery Receipts" },
+  { key: "overall_details", label: "Overall Details" },
+  { key: "tracking_system", label: "Tracking System" },
 ];
 
 const emptyPerms: Permissions = {
   dashboard: true,
-  tracking: false,
-  reports: false,
-  billing: false,
-  settings: false,
+  tracking: false, reports: false, billing: false, settings: false,
+  stations: false, clients: false, consignments: false, shipments: false,
+  payments: false, delivery_receipts: false, overall_details: false, tracking_system: false,
 };
 
 export default function UsersAdminPage() {

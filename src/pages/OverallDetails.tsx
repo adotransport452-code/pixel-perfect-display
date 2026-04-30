@@ -472,9 +472,8 @@ function OriginTable({ origin }: { origin: Origin }) {
       {/* View dialog */}
       {viewing && (
         <Dialog open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
-          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>{viewing.consignment_no} — {viewing.marka}</DialogTitle></DialogHeader>
-            <pre className="text-xs whitespace-pre-wrap bg-muted p-3 rounded">{JSON.stringify(viewing, null, 2)}</pre>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+            <ConsignmentDetailView r={viewing} origin={origin} />
           </DialogContent>
         </Dialog>
       )}
@@ -852,3 +851,116 @@ export default function OverallDetails() {
     </div>
   );
 }
+
+// ---------- Detail (View) Card matching reference design ----------
+function statusPillCls(status: string | null | undefined) {
+  const s = (status || "").toLowerCase();
+  if (s.includes("delivered")) return "bg-warning/20 text-warning border border-warning/40";
+  if (s.includes("kerung")) return "bg-destructive/20 text-destructive border border-destructive/40";
+  if (s.includes("tatopani")) return "bg-warning/20 text-warning border border-warning/40";
+  if (s.includes("nylam")) return "bg-primary/20 text-primary border border-primary/40";
+  if (s.includes("lhasa")) return "bg-purple-500/20 text-purple-600 border border-purple-500/40";
+  return "bg-muted text-muted-foreground border border-border";
+}
+
+function DetailTile({ icon, label, value, tone = "default" }: { icon: string; label: string; value: React.ReactNode; tone?: "default" | "amber" | "red" | "blue" }) {
+  const tones: Record<string, string> = {
+    default: "bg-card border-border",
+    amber: "bg-warning/10 border-warning/30",
+    red: "bg-destructive/10 border-destructive/30",
+    blue: "bg-primary/10 border-primary/30",
+  };
+  return (
+    <div className={cn("rounded-md border p-3", tones[tone])}>
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+        <span>{icon}</span> {label}
+      </div>
+      <div className="text-sm font-bold mt-1 text-foreground break-words">{value || "—"}</div>
+    </div>
+  );
+}
+
+function ConsignmentDetailView({ r, origin }: { r: OverallDetail; origin: Origin }) {
+  const lastTat = (r.tatopani_containers || [])[(r.tatopani_containers || []).length - 1];
+  const lastKer = (r.kerung_containers || [])[(r.kerung_containers || []).length - 1];
+  const overallStatus = lastKer?.status || lastTat?.status || r.status || "Pending";
+  const onWay = calcOnTheWay(r);
+  const missing = calcMissing(r);
+  const remNylam = calcRemainingNylam(r);
+  const isKerung = isKerungDestination(r.destination);
+
+  return (
+    <div className="bg-background">
+      {/* Blue header */}
+      <div className="bg-gradient-primary text-primary-foreground p-5 relative">
+        <div className="text-2xl font-extrabold">{r.consignment_no}</div>
+        <div className="text-xs opacity-90 mt-0.5">{r.marka || "—"} · {origin}</div>
+        <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
+          <span className={cn("px-5 py-2 rounded-full text-sm font-semibold", statusPillCls(overallStatus))}>
+            {overallStatus}
+          </span>
+        </div>
+      </div>
+
+      {/* Tile grid */}
+      <div className={cn("p-4 grid grid-cols-2 md:grid-cols-3 gap-3", isKerung && "[&_.text-foreground]:text-destructive")}>
+        <DetailTile icon="📅" label="Date" value={r.date} />
+        <DetailTile icon="📦" label="Consignment No." value={r.consignment_no} tone="amber" />
+        <DetailTile icon="🏷️" label="MARKA" value={r.marka} tone="amber" />
+        <DetailTile icon="📦" label="Total CTN" value={String(r.total_ctns ?? 0)} tone="amber" />
+        <DetailTile icon="📐" label="CBM" value={String(r.cbm ?? 0)} />
+        <DetailTile icon="⚖️" label="GW (KG)" value={String(r.gw ?? 0)} />
+        <DetailTile icon="📍" label="Destination" value={r.destination} />
+        <DetailTile icon="🔖" label="LOT No." value={r.lot_no} />
+        <DetailTile icon="🚚" label={`Dispatched from ${origin}`} value={r.dispatched_from_origin} />
+        <DetailTile icon="📦" label={`${origin} Container`} value={r.origin_container} />
+        <DetailTile icon="📍" label="Arrival at Nylam" value={(r.nylam_arrival_dates || []).filter(Boolean).join(", ")} />
+        <DetailTile icon="👤" label="Client" value={r.client} tone="amber" />
+        <DetailTile icon="🛣️" label="On the Way" value={onWay === null ? "-" : String(onWay)} tone="blue" />
+        <DetailTile icon="⚠️" label="Missing CTN" value={missing === null ? "0" : String(missing)} tone="red" />
+        <DetailTile icon="📦" label="Remaining CTN at Nylam" value={remNylam === null ? "0" : String(remNylam)} tone="amber" />
+        <DetailTile icon="📝" label="Remarks" value={r.remarks || "-"} />
+      </div>
+
+      {/* TATOPANI / KERUNG cards */}
+      <div className="px-4 pb-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="rounded-md border border-warning/40 bg-warning/5 p-3">
+          <div className="font-bold text-warning flex items-center gap-2 mb-2">
+            <span>🔶</span> TATOPANI ({(r.tatopani_containers || []).length} rows)
+          </div>
+          {(r.tatopani_containers || []).length === 0 ? (
+            <div className="text-xs text-muted-foreground">No data</div>
+          ) : (r.tatopani_containers || []).map((c, i) => (
+            <div key={i} className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs py-2 border-t border-border/50 first:border-t-0">
+              <div><span className="text-muted-foreground">Dispatched:</span> {c.dispatched_from_nylam || "-"}</div>
+              <div><span className="text-muted-foreground">Loaded:</span> {c.loaded_ctn ?? "-"}</div>
+              <div><span className="text-muted-foreground">Container:</span> {c.nylam_container || "-"}</div>
+              <div><span className="text-muted-foreground">Status:</span> <span className="text-warning font-medium">{c.status}</span></div>
+              <div><span className="text-muted-foreground">Received:</span> {c.received_ctn ?? "-"}</div>
+              <div><span className="text-muted-foreground">Arrival:</span> {c.arrival_date || "-"}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3">
+          <div className="font-bold text-destructive flex items-center gap-2 mb-2">
+            <span>🔴</span> KERUNG ({(r.kerung_containers || []).length} rows)
+          </div>
+          {(r.kerung_containers || []).length === 0 ? (
+            <div className="text-xs text-muted-foreground">No data</div>
+          ) : (r.kerung_containers || []).map((c, i) => (
+            <div key={i} className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs py-2 border-t border-border/50 first:border-t-0">
+              <div><span className="text-muted-foreground">Dispatched:</span> {c.dispatched_from_nylam || "-"}</div>
+              <div><span className="text-muted-foreground">Loaded:</span> {c.loaded_ctn ?? "-"}</div>
+              <div><span className="text-muted-foreground">Container:</span> {c.nylam_container || "-"}</div>
+              <div><span className="text-muted-foreground">Status:</span> <span className="text-destructive font-medium">{c.status}</span></div>
+              <div><span className="text-muted-foreground">Received:</span> {c.received_ctn ?? "-"}</div>
+              <div><span className="text-muted-foreground">Arrival at Kerung:</span> {c.arrival_date || "-"}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+

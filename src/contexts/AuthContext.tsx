@@ -5,10 +5,20 @@ import { supabase } from "@/integrations/supabase/client";
 export type Role = "admin" | "staff" | "client";
 export type Permissions = {
   dashboard: boolean;
+  // legacy grouped flags (still respected)
   tracking: boolean;
   reports: boolean;
   billing: boolean;
   settings: boolean;
+  // per-section flags
+  stations: boolean;
+  clients: boolean;
+  consignments: boolean;
+  shipments: boolean;
+  payments: boolean;
+  delivery_receipts: boolean;
+  overall_details: boolean;
+  tracking_system: boolean;
 };
 export type Profile = { user_id: string; name: string; email: string; disabled: boolean; };
 
@@ -24,7 +34,11 @@ type AuthState = {
   refresh: () => Promise<void>;
 };
 
-const defaultPerms: Permissions = { dashboard: false, tracking: false, reports: false, billing: false, settings: false };
+const defaultPerms: Permissions = {
+  dashboard: false, tracking: false, reports: false, billing: false, settings: false,
+  stations: false, clients: false, consignments: false, shipments: false,
+  payments: false, delivery_receipts: false, overall_details: false, tracking_system: false,
+};
 const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -48,6 +62,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setPermissions({
         dashboard: !!(p as any).dashboard, tracking: !!(p as any).tracking,
         reports: !!(p as any).reports, billing: !!(p as any).billing, settings: !!(p as any).settings,
+        stations: !!(p as any).stations, clients: !!(p as any).clients,
+        consignments: !!(p as any).consignments, shipments: !!(p as any).shipments,
+        payments: !!(p as any).payments, delivery_receipts: !!(p as any).delivery_receipts,
+        overall_details: !!(p as any).overall_details, tracking_system: !!(p as any).tracking_system,
       });
     } else setPermissions(defaultPerms);
   }, []);

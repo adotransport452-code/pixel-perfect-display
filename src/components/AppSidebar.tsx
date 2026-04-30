@@ -2,17 +2,18 @@ import { NavLink, useLocation } from "react-router-dom";
 import { MapPin, Package, Truck, LayoutDashboard, Receipt, CreditCard, Users, UserSquare2, ClipboardList, Radar } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { useAuth, type Permissions } from "@/contexts/AuthContext";
+import adoLogo from "@/assets/ado-logo.png";
 
-const items: { title: string; url: string; icon: any; perm?: keyof Permissions; }[] = [
+const items: { title: string; url: string; icon: any; perm?: keyof Permissions; legacy?: keyof Permissions; }[] = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, perm: "dashboard" },
-  { title: "Stations", url: "/stations", icon: MapPin, perm: "settings" },
-  { title: "Clients", url: "/clients", icon: UserSquare2, perm: "settings" },
-  { title: "Consignments", url: "/consignments", icon: Package, perm: "reports" },
-  { title: "Shipments", url: "/shipments", icon: Truck, perm: "tracking" },
-  { title: "Payments", url: "/payments", icon: CreditCard, perm: "billing" },
-  { title: "Delivery Receipts", url: "/delivery-receipts", icon: Receipt, perm: "settings" },
-  { title: "Overall Details", url: "/overall-details", icon: ClipboardList, perm: "tracking" },
-  { title: "Tracking System", url: "/tracking-system", icon: Radar, perm: "tracking" },
+  { title: "Stations", url: "/stations", icon: MapPin, perm: "stations", legacy: "settings" },
+  { title: "Clients", url: "/clients", icon: UserSquare2, perm: "clients", legacy: "settings" },
+  { title: "Consignments", url: "/consignments", icon: Package, perm: "consignments", legacy: "reports" },
+  { title: "Shipments", url: "/shipments", icon: Truck, perm: "shipments", legacy: "tracking" },
+  { title: "Payments", url: "/payments", icon: CreditCard, perm: "payments", legacy: "billing" },
+  { title: "Delivery Receipts", url: "/delivery-receipts", icon: Receipt, perm: "delivery_receipts", legacy: "settings" },
+  { title: "Overall Details", url: "/overall-details", icon: ClipboardList, perm: "overall_details", legacy: "tracking" },
+  { title: "Tracking System", url: "/tracking-system", icon: Radar, perm: "tracking_system", legacy: "tracking" },
 ];
 
 export function AppSidebar() {
@@ -21,18 +22,21 @@ export function AppSidebar() {
   const { pathname } = useLocation();
   const { role, permissions, user } = useAuth();
   const isActive = (url: string) => url === "/" ? pathname === "/" : pathname.startsWith(url);
-  const visible = items.filter((i) => !user || role === "admin" || !i.perm || permissions[i.perm]);
+  const visible = items.filter((i) => {
+    if (!user) return true;
+    if (role === "admin") return true;
+    if (!i.perm) return true;
+    return permissions[i.perm] || (i.legacy && permissions[i.legacy]);
+  });
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-primary text-primary-foreground font-bold text-lg shadow-elegant">A</div>
-          {!collapsed && (
-            <div className="flex flex-col leading-tight">
-              <span className="font-bold text-sm text-sidebar-foreground">ADO Transport</span>
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Nepal</span>
-            </div>
+      <SidebarHeader className="border-b border-sidebar-border p-3">
+        <div className="flex items-center justify-center">
+          {collapsed ? (
+            <img src={adoLogo} alt="ADO" className="h-8 w-8 object-contain" />
+          ) : (
+            <img src={adoLogo} alt="ADO International Transport Nepal" className="h-12 w-auto object-contain" />
           )}
         </div>
       </SidebarHeader>
@@ -43,7 +47,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {visible.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
                     <NavLink to={item.url} end={item.url === "/"} className="flex items-center gap-3">
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
@@ -61,7 +65,7 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={pathname.startsWith("/admin/users")}>
+                  <SidebarMenuButton asChild isActive={pathname.startsWith("/admin/users")} tooltip="User Management">
                     <NavLink to="/admin/users" className="flex items-center gap-3">
                       <Users className="h-4 w-4" />
                       {!collapsed && <span>User Management</span>}
