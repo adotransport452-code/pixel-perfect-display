@@ -115,9 +115,8 @@ function TrackingCard({ r }: { r: OverallDetail }) {
               <TrailStep title="Lhasa" tone="muted" lines={["Pending"]} />
             ) : (
               (r.lhasa_containers || []).map((c, i) => (
-                <>
+                <FragmentItem key={`l-${i}`}>
                   <TrailStep
-                    key={`l-${i}`}
                     title={`Lhasa Container ${i + 1}`}
                     tone="purple"
                     done={!!c.arrived_at_nylam}
@@ -129,7 +128,7 @@ function TrackingCard({ r }: { r: OverallDetail }) {
                     ]}
                   />
                   <Arrow />
-                </>
+                </FragmentItem>
               ))
             )}
             {/* Nylam */}
@@ -144,10 +143,9 @@ function TrackingCard({ r }: { r: OverallDetail }) {
             />
             {/* Tatopani / Kerung */}
             {(r.tatopani_containers || []).map((c, i) => (
-              <>
+              <FragmentItem key={`t-${i}`}>
                 <Arrow />
                 <TrailStep
-                  key={`t-${i}`}
                   title={`Tatopani Container ${i + 1}`}
                   tone="warning"
                   done={c.status === "At Tatopani port"}
@@ -157,13 +155,12 @@ function TrackingCard({ r }: { r: OverallDetail }) {
                     c.nylam_container ? `${c.nylam_container} | Loaded: ${c.loaded_ctn} | Received: ${c.received_ctn ?? "—"}` : "",
                   ]}
                 />
-              </>
+              </FragmentItem>
             ))}
             {(r.kerung_containers || []).map((c, i) => (
-              <>
+              <FragmentItem key={`k-${i}`}>
                 <Arrow />
                 <TrailStep
-                  key={`k-${i}`}
                   title={`Kerung Container ${i + 1}`}
                   tone="destructive"
                   done={c.status === "At Kerung port"}
@@ -173,7 +170,7 @@ function TrackingCard({ r }: { r: OverallDetail }) {
                     c.nylam_container ? `${c.nylam_container} | Loaded: ${c.loaded_ctn} | Received: ${c.received_ctn ?? "—"}` : "",
                   ]}
                 />
-              </>
+              </FragmentItem>
             ))}
           </div>
         </div>
