@@ -230,6 +230,102 @@ export type Database = {
         }
         Relationships: []
       }
+      overall_details: {
+        Row: {
+          arrival_at_lhasa: string | null
+          cbm: number | null
+          client: string | null
+          consignment_no: string
+          created_at: string
+          created_by: string | null
+          date: string | null
+          destination: string | null
+          dispatched_from_origin: string | null
+          gw: number | null
+          id: string
+          kerung_containers: Json | null
+          kerung_total_containers: number | null
+          lhasa_containers: Json | null
+          lhasa_total_containers: number | null
+          loaded_ctns: number | null
+          lot_no: string | null
+          marka: string | null
+          nylam_arrival_dates: Json | null
+          origin: string
+          origin_container: string | null
+          received_ctns_at_nylam: number | null
+          remarks: string | null
+          status: string | null
+          tatopani_containers: Json | null
+          tatopani_total_containers: number | null
+          total_ctns: number | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          arrival_at_lhasa?: string | null
+          cbm?: number | null
+          client?: string | null
+          consignment_no: string
+          created_at?: string
+          created_by?: string | null
+          date?: string | null
+          destination?: string | null
+          dispatched_from_origin?: string | null
+          gw?: number | null
+          id?: string
+          kerung_containers?: Json | null
+          kerung_total_containers?: number | null
+          lhasa_containers?: Json | null
+          lhasa_total_containers?: number | null
+          loaded_ctns?: number | null
+          lot_no?: string | null
+          marka?: string | null
+          nylam_arrival_dates?: Json | null
+          origin: string
+          origin_container?: string | null
+          received_ctns_at_nylam?: number | null
+          remarks?: string | null
+          status?: string | null
+          tatopani_containers?: Json | null
+          tatopani_total_containers?: number | null
+          total_ctns?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          arrival_at_lhasa?: string | null
+          cbm?: number | null
+          client?: string | null
+          consignment_no?: string
+          created_at?: string
+          created_by?: string | null
+          date?: string | null
+          destination?: string | null
+          dispatched_from_origin?: string | null
+          gw?: number | null
+          id?: string
+          kerung_containers?: Json | null
+          kerung_total_containers?: number | null
+          lhasa_containers?: Json | null
+          lhasa_total_containers?: number | null
+          loaded_ctns?: number | null
+          lot_no?: string | null
+          marka?: string | null
+          nylam_arrival_dates?: Json | null
+          origin?: string
+          origin_container?: string | null
+          received_ctns_at_nylam?: number | null
+          remarks?: string | null
+          status?: string | null
+          tatopani_containers?: Json | null
+          tatopani_total_containers?: number | null
+          total_ctns?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number

@@ -38,6 +38,57 @@ export type Payment = {
   consignment_details: PaymentConsignmentDetail[];
   created_at: string; updated_at: string;
 };
+export type LhasaContainer = {
+  container_name: string;
+  dispatched_from_lhasa: string | null; // YYYY-MM-DD
+  loaded_ctn: number;
+  arrived_at_nylam: string | null;
+};
+export type DestContainer = {
+  dispatched_from_nylam: string | null;
+  loaded_ctn: number;
+  nylam_container: string;
+  status: string; // On the way to X | At X port
+  received_ctn: number | null;
+  arrival_date: string | null;
+};
+export type OverallStatus =
+  | "On the way to Lhasa" | "At Lhasa" | "On the way to Nylam" | "At Nylam"
+  | "On the way to Tatopani" | "At Tatopani port" | "On the way to Kerung" | "At Kerung port"
+  | "Tatopani Delivered" | "Kerung Delivered";
+
+export type OverallDetail = {
+  id: string;
+  origin: "Guangzhou" | "Yiwu";
+  date: string | null;
+  consignment_no: string;
+  marka: string | null;
+  total_ctns: number;
+  loaded_ctns: number;
+  cbm: number;
+  gw: number;
+  destination: string | null;
+  lot_no: string | null;
+  dispatched_from_origin: string | null;
+  origin_container: string | null;
+  status: OverallStatus | string;
+  arrival_at_lhasa: string | null;
+  lhasa_containers: LhasaContainer[];
+  lhasa_total_containers: number;
+  nylam_arrival_dates: string[];
+  received_ctns_at_nylam: number;
+  tatopani_containers: DestContainer[];
+  tatopani_total_containers: number;
+  kerung_containers: DestContainer[];
+  kerung_total_containers: number;
+  client: string | null;
+  remarks: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type DeliveryReceipt = {
   id: string; consignment_ids: string[];
   client_name: string; client_phone: string; client_email: string | null;
@@ -82,5 +133,33 @@ export const api = {
     list: async () => { const { data, error } = await supabase.from("payments").select("*").order("created_at", { ascending: false }); if (error) throw error; return ((data || []) as any[]).map((p) => ({ ...p, consignment_ids: p.consignment_ids || [], consignment_details: p.consignment_details || [] })) as Payment[]; },
     create: async (p: Partial<Payment>) => { const { data, error } = await supabase.from("payments").insert(p as any).select().single(); if (error) throw error; return data as unknown as Payment; },
     remove: async (id: string) => { const { error } = await supabase.from("payments").delete().eq("id", id); if (error) throw error; },
+  },
+  overallDetails: {
+    list: async (origin: "Guangzhou" | "Yiwu") => {
+      const { data, error } = await supabase.from("overall_details" as any).select("*").eq("origin", origin).order("created_at", { ascending: false });
+      if (error) throw error;
+      return ((data || []) as any[]).map((d) => ({
+        ...d,
+        lhasa_containers: d.lhasa_containers || [],
+        nylam_arrival_dates: d.nylam_arrival_dates || [],
+        tatopani_containers: d.tatopani_containers || [],
+        kerung_containers: d.kerung_containers || [],
+      })) as OverallDetail[];
+    },
+    create: async (d: Partial<OverallDetail>) => {
+      const { data, error } = await supabase.from("overall_details" as any).insert(d as any).select().single();
+      if (error) throw error;
+      return data as unknown as OverallDetail;
+    },
+    update: async (id: string, d: Partial<OverallDetail>) => {
+      const { data, error } = await supabase.from("overall_details" as any).update(d as any).eq("id", id).select().single();
+      if (error) throw error;
+      return data as unknown as OverallDetail;
+    },
+    bulkUpdate: async (ids: string[], patch: Partial<OverallDetail>) => {
+      const { error } = await supabase.from("overall_details" as any).update(patch as any).in("id", ids);
+      if (error) throw error;
+    },
+    remove: async (id: string) => { const { error } = await supabase.from("overall_details" as any).delete().eq("id", id); if (error) throw error; },
   },
 };

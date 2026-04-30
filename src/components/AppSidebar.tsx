@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { MapPin, Package, Truck, LayoutDashboard, Receipt, CreditCard, Users, UserSquare2 } from "lucide-react";
+import { MapPin, Package, Truck, LayoutDashboard, Receipt, CreditCard, Users, UserSquare2, ClipboardList } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { useAuth, type Permissions } from "@/contexts/AuthContext";
 
@@ -11,6 +11,7 @@ const items: { title: string; url: string; icon: any; perm?: keyof Permissions; 
   { title: "Shipments", url: "/shipments", icon: Truck, perm: "tracking" },
   { title: "Payments", url: "/payments", icon: CreditCard, perm: "billing" },
   { title: "Delivery Receipts", url: "/delivery-receipts", icon: Receipt, perm: "settings" },
+  { title: "Overall Details", url: "/overall-details", icon: ClipboardList, perm: "tracking" },
 ];
 
 export function AppSidebar() {
