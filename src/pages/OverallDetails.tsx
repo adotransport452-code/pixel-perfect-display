@@ -472,9 +472,8 @@ function OriginTable({ origin }: { origin: Origin }) {
       {/* View dialog */}
       {viewing && (
         <Dialog open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
-          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>{viewing.consignment_no} — {viewing.marka}</DialogTitle></DialogHeader>
-            <pre className="text-xs whitespace-pre-wrap bg-muted p-3 rounded">{JSON.stringify(viewing, null, 2)}</pre>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+            <ConsignmentDetailView r={viewing} origin={origin} />
           </DialogContent>
         </Dialog>
       )}
