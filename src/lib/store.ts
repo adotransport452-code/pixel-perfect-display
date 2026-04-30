@@ -2,6 +2,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type Station = { id: string; name: string; code: string; phone: string | null; location: string | null; cbm_rate: number; weight_rate: number; created_at: string; updated_at: string; };
 
+export type Client = { id: string; name: string; phone: string | null; address: string | null; created_by: string | null; updated_by: string | null; created_at: string; updated_at: string; };
+
 export type Consignment = {
   id: string; bill_no: string; marka: string; start_station: string; end_station: string;
   start_date: string; expected_delivery_date: string | null;
@@ -69,6 +71,12 @@ export const api = {
     create: async (d: Partial<DeliveryReceipt>) => { const { data, error } = await supabase.from("delivery_receipts").insert(d as any).select().single(); if (error) throw error; return data as unknown as DeliveryReceipt; },
     update: async (id: string, d: Partial<DeliveryReceipt>) => { const { data, error } = await supabase.from("delivery_receipts").update(d as any).eq("id", id).select().single(); if (error) throw error; return data as unknown as DeliveryReceipt; },
     remove: async (id: string) => { const { error } = await supabase.from("delivery_receipts").delete().eq("id", id); if (error) throw error; },
+  },
+  clients: {
+    list: async () => { const { data, error } = await supabase.from("clients").select("*").order("created_at", { ascending: false }); if (error) throw error; return (data || []) as Client[]; },
+    create: async (c: Partial<Client>) => { const { data, error } = await supabase.from("clients").insert(c as any).select().single(); if (error) throw error; return data as Client; },
+    update: async (id: string, c: Partial<Client>) => { const { data, error } = await supabase.from("clients").update(c as any).eq("id", id).select().single(); if (error) throw error; return data as Client; },
+    remove: async (id: string) => { const { error } = await supabase.from("clients").delete().eq("id", id); if (error) throw error; },
   },
   payments: {
     list: async () => { const { data, error } = await supabase.from("payments").select("*").order("created_at", { ascending: false }); if (error) throw error; return ((data || []) as any[]).map((p) => ({ ...p, consignment_ids: p.consignment_ids || [], consignment_details: p.consignment_details || [] })) as Payment[]; },
