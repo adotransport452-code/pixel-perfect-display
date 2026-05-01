@@ -14,13 +14,30 @@ const ANON_KEY = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? Deno.env.get("SUPAB
 
 const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
-type Permissions = { dashboard: boolean; tracking: boolean; reports: boolean; billing: boolean; settings: boolean };
+type Permissions = {
+  dashboard?: boolean; tracking?: boolean; reports?: boolean; billing?: boolean; settings?: boolean;
+  stations?: boolean; clients?: boolean; consignments?: boolean; shipments?: boolean;
+  payments?: boolean; delivery_receipts?: boolean; overall_details?: boolean; tracking_system?: boolean;
+};
 type Role = "admin" | "staff" | "client";
+
+const PERM_KEYS = [
+  "dashboard", "tracking", "reports", "billing", "settings",
+  "stations", "clients", "consignments", "shipments",
+  "payments", "delivery_receipts", "overall_details", "tracking_system",
+] as const;
+
+function normalizePerms(p: Permissions | undefined, role: Role): Record<string, boolean> {
+  const out: Record<string, boolean> = {};
+  for (const k of PERM_KEYS) out[k] = role === "admin" ? true : !!(p as any)?.[k];
+  return out;
+}
 
 async function setRoleAndPermissions(userId: string, role: Role, perms: Permissions) {
   await admin.from("user_roles").delete().eq("user_id", userId);
   await admin.from("user_roles").insert({ user_id: userId, role });
-  await admin.from("user_permissions").upsert({ user_id: userId, ...perms }, { onConflict: "user_id" });
+  const normalized = normalizePerms(perms, role);
+  await admin.from("user_permissions").upsert({ user_id: userId, ...normalized }, { onConflict: "user_id" });
 }
 
 async function countAdmins() {
@@ -83,14 +100,17 @@ Deno.serve(async (req) => {
       ]);
       const rolesByUser = new Map<string, Role>();
       (roles ?? []).forEach((r: any) => rolesByUser.set(r.user_id, r.role));
-      const permsByUser = new Map<string, Permissions>();
-      (perms ?? []).forEach((p: any) => permsByUser.set(p.user_id, {
-        dashboard: !!p.dashboard, tracking: !!p.tracking, reports: !!p.reports, billing: !!p.billing, settings: !!p.settings,
-      }));
+      const permsByUser = new Map<string, Record<string, boolean>>();
+      (perms ?? []).forEach((p: any) => {
+        const o: Record<string, boolean> = {};
+        for (const k of PERM_KEYS) o[k] = !!p[k];
+        permsByUser.set(p.user_id, o);
+      });
+      const empty = Object.fromEntries(PERM_KEYS.map((k) => [k, false]));
       return json((profiles ?? []).map((p: any) => ({
         ...p,
         role: rolesByUser.get(p.user_id) ?? null,
-        permissions: permsByUser.get(p.user_id) ?? { dashboard: false, tracking: false, reports: false, billing: false, settings: false },
+        permissions: permsByUser.get(p.user_id) ?? empty,
       })));
     }
 
