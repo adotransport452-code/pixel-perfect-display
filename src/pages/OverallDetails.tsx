@@ -369,15 +369,27 @@ function OriginTable({ origin }: { origin: Origin }) {
                       {expandedLhasa.has(r.id) && (
                         <div className="mt-2 p-2 rounded border border-border bg-muted/40 text-xs space-y-2 min-w-[260px]">
                           {(r.lhasa_containers || []).map((c, i) => (
-                            <div key={i} className="border-b border-border/50 pb-2 space-y-1">
+                            <div key={i} className="border-b border-border/50 pb-2 space-y-1.5">
                               <div className="flex items-center justify-between">
                                 <b>Container {i + 1}</b>
                                 <button onClick={() => removeLhasa(i)} className="text-destructive"><X className="h-3 w-3" /></button>
                               </div>
-                              <Input placeholder="Container name" value={c.container_name} onChange={(e) => patchLhasa(i, { container_name: e.target.value })} className="h-7 text-xs" />
-                              <Input type="date" value={c.dispatched_from_lhasa || ""} onChange={(e) => patchLhasa(i, { dispatched_from_lhasa: e.target.value || null })} className="h-7 text-xs" />
-                              <Input type="number" placeholder="Loaded CTN" value={c.loaded_ctn} onChange={(e) => patchLhasa(i, { loaded_ctn: Number(e.target.value) })} className="h-7 text-xs" />
-                              <Input type="date" value={c.arrived_at_nylam || ""} onChange={(e) => patchLhasa(i, { arrived_at_nylam: e.target.value || null })} className="h-7 text-xs" />
+                              <div>
+                                <Label className="text-[10px] text-muted-foreground">Container Name</Label>
+                                <Input placeholder="e.g. DB120" value={c.container_name} onChange={(e) => patchLhasa(i, { container_name: e.target.value })} className="h-7 text-xs" />
+                              </div>
+                              <div>
+                                <Label className="text-[10px] text-muted-foreground">Dispatched Date (from Lhasa)</Label>
+                                <Input type="date" value={c.dispatched_from_lhasa || ""} onChange={(e) => patchLhasa(i, { dispatched_from_lhasa: e.target.value || null })} className="h-7 text-xs" />
+                              </div>
+                              <div>
+                                <Label className="text-[10px] text-muted-foreground">Loaded CTN</Label>
+                                <Input type="number" placeholder="0" value={c.loaded_ctn} onChange={(e) => patchLhasa(i, { loaded_ctn: Number(e.target.value) })} className="h-7 text-xs" />
+                              </div>
+                              <div>
+                                <Label className="text-[10px] text-muted-foreground">Arrival Date (at Nylam)</Label>
+                                <Input type="date" value={c.arrived_at_nylam || ""} onChange={(e) => patchLhasa(i, { arrived_at_nylam: e.target.value || null })} className="h-7 text-xs" />
+                              </div>
                             </div>
                           ))}
                           <Button size="sm" variant="outline" className="w-full h-7 text-xs" onClick={addLhasa}><Plus className="h-3 w-3 mr-1" /> Add Lhasa Container</Button>
@@ -709,20 +721,38 @@ function InlineDestEditor({ index, c, statuses, onChange, onRemove }: {
   onChange: (p: Partial<DestContainer>) => void; onRemove: () => void;
 }) {
   return (
-    <div className="border-b border-border/50 pb-2 space-y-1">
+    <div className="border-b border-border/50 pb-2 space-y-1.5">
       <div className="flex items-center justify-between">
         <b>Container {index + 1}</b>
         <button onClick={onRemove} className="text-destructive"><X className="h-3 w-3" /></button>
       </div>
-      <Input placeholder="Nylam Container" value={c.nylam_container} onChange={(e) => onChange({ nylam_container: e.target.value })} className="h-7 text-xs" />
-      <Input type="date" value={c.dispatched_from_nylam || ""} onChange={(e) => onChange({ dispatched_from_nylam: e.target.value || null })} className="h-7 text-xs" />
-      <Input type="number" placeholder="Loaded CTN" value={c.loaded_ctn} onChange={(e) => onChange({ loaded_ctn: Number(e.target.value) })} className="h-7 text-xs" />
-      <Select value={c.status} onValueChange={(v) => onChange({ status: v })}>
-        <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-        <SelectContent>{statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-      </Select>
-      <Input type="number" placeholder="Received CTN" value={c.received_ctn ?? ""} onChange={(e) => onChange({ received_ctn: e.target.value === "" ? null : Number(e.target.value) })} className="h-7 text-xs" />
-      <Input type="date" value={c.arrival_date || ""} onChange={(e) => onChange({ arrival_date: e.target.value || null })} className="h-7 text-xs" />
+      <div>
+        <Label className="text-[10px] text-muted-foreground">Nylam Container</Label>
+        <Input placeholder="e.g. RXTU4565002" value={c.nylam_container} onChange={(e) => onChange({ nylam_container: e.target.value })} className="h-7 text-xs" />
+      </div>
+      <div>
+        <Label className="text-[10px] text-muted-foreground">Dispatched Date (from Nylam)</Label>
+        <Input type="date" value={c.dispatched_from_nylam || ""} onChange={(e) => onChange({ dispatched_from_nylam: e.target.value || null })} className="h-7 text-xs" />
+      </div>
+      <div>
+        <Label className="text-[10px] text-muted-foreground">Loaded CTN</Label>
+        <Input type="number" placeholder="0" value={c.loaded_ctn} onChange={(e) => onChange({ loaded_ctn: Number(e.target.value) })} className="h-7 text-xs" />
+      </div>
+      <div>
+        <Label className="text-[10px] text-muted-foreground">Status</Label>
+        <Select value={c.status} onValueChange={(v) => onChange({ status: v })}>
+          <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>{statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label className="text-[10px] text-muted-foreground">Received CTN</Label>
+        <Input type="number" placeholder="0" value={c.received_ctn ?? ""} onChange={(e) => onChange({ received_ctn: e.target.value === "" ? null : Number(e.target.value) })} className="h-7 text-xs" />
+      </div>
+      <div>
+        <Label className="text-[10px] text-muted-foreground">Arrival Date (at port)</Label>
+        <Input type="date" value={c.arrival_date || ""} onChange={(e) => onChange({ arrival_date: e.target.value || null })} className="h-7 text-xs" />
+      </div>
     </div>
   );
 }
