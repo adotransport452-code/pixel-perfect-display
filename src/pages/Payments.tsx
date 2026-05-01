@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { api, Consignment, Payment, PaymentConsignmentDetail } from "@/lib/store";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 type FormState = {
   rows: PaymentConsignmentDetail[];
