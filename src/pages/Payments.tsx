@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Trash2, Upload } from "lucide-react";
+import { Plus, Search, Trash2, Upload, Calendar, User, FileText, CheckCircle2, Receipt as ReceiptIcon, Wallet, BadgeCheck } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
 import { DataTable } from "@/components/DataTable";
@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { api, Consignment, Payment, PaymentConsignmentDetail } from "@/lib/store";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 type FormState = {
   rows: PaymentConsignmentDetail[];
@@ -346,42 +347,96 @@ const Payments = () => {
 
       {/* View dialog */}
       <Dialog open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle className="text-primary">Payment Details</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-4xl max-h-[92vh] overflow-y-auto p-0">
           {viewing && (
-            <div className="space-y-4 text-sm">
-              <div className="grid grid-cols-2 gap-4">
-                <Row label="Amount" value={`¥ ${Number(viewing.amount).toLocaleString()}`} />
-                <Row label="Discount" value={`¥ ${Number(viewing.discount).toLocaleString()}`} />
-                <Row label="Sub Total" value={`¥ ${Number(viewing.sub_total).toLocaleString()}`} />
-                <Row label="Remaining" value={`¥ ${Number(viewing.remaining_amount).toLocaleString()}`} />
-                <Row label="Status" value={viewing.status} />
-                <Row label="Verifier" value={viewing.verifier || "—"} />
-                <Row label="Initiated By" value={viewing.initiated_by || "—"} />
-                <Row label="Remarks" value={viewing.remarks || "N/A"} />
+            <div className="bg-background">
+              {/* Gradient header */}
+              <div className="bg-gradient-primary text-primary-foreground p-6 relative">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-full bg-white/20 p-2.5"><ReceiptIcon className="h-6 w-6" /></div>
+                  <div>
+                    <div className="text-xs uppercase tracking-wider opacity-80">Payment Receipt</div>
+                    <div className="text-2xl font-extrabold">¥ {Number(viewing.amount).toLocaleString()}</div>
+                    <div className="text-xs opacity-90 mt-0.5">ID: {viewing.id.slice(0, 8)} · {new Date(viewing.created_at).toLocaleString()}</div>
+                  </div>
+                </div>
+                <div className="absolute right-6 top-1/2 -translate-y-1/2">
+                  <span className={cn(
+                    "inline-flex items-center gap-1 px-4 py-1.5 rounded-full text-sm font-semibold border-2",
+                    viewing.status === "Approved" && "bg-emerald-500/20 border-emerald-300 text-white",
+                    viewing.status === "Rejected" && "bg-destructive/30 border-destructive text-white",
+                    viewing.status === "Pending" && "bg-amber-500/20 border-amber-300 text-white",
+                  )}>
+                    <CheckCircle2 className="h-4 w-4" /> {viewing.status}
+                  </span>
+                </div>
               </div>
-              {viewing.receipt_url && <img src={viewing.receipt_url} alt="receipt" className="max-h-80 rounded border" />}
-              <div className="overflow-hidden rounded border">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted">
-                    <tr>
-                      <th className="p-2 text-left">Consignment No</th>
-                      <th className="p-2 text-left">Bill Amount</th>
-                      <th className="p-2 text-left">Discount</th>
-                      <th className="p-2 text-left">Payment</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(viewing.consignment_details || []).map((r) => (
-                      <tr key={r.consignment_id} className="border-t">
-                        <td className="p-2">{r.bill_no}</td>
-                        <td className="p-2">¥ {Number(r.bill_amount).toLocaleString()}</td>
-                        <td className="p-2">¥ {Number(r.discount).toLocaleString()}</td>
-                        <td className="p-2">¥ {Number(r.payment).toLocaleString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+
+              {/* Summary tiles */}
+              <div className="p-5 grid grid-cols-2 md:grid-cols-4 gap-3">
+                <StatTile icon={<Wallet className="h-4 w-4" />} label="Sub Total" value={`¥ ${Number(viewing.sub_total).toLocaleString()}`} tone="default" />
+                <StatTile icon={<BadgeCheck className="h-4 w-4" />} label="Paid Amount" value={`¥ ${Number(viewing.paid_amount || viewing.amount).toLocaleString()}`} tone="success" />
+                <StatTile icon={<FileText className="h-4 w-4" />} label="Discount" value={`¥ ${Number(viewing.discount).toLocaleString()}`} tone="warning" />
+                <StatTile icon={<Wallet className="h-4 w-4" />} label="Remaining" value={`¥ ${Number(viewing.remaining_amount).toLocaleString()}`} tone={Number(viewing.remaining_amount) > 0 ? "destructive" : "default"} />
+              </div>
+
+              {/* Meta + Receipt */}
+              <div className="px-5 pb-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2 space-y-3">
+                  <div className="rounded-lg border border-border bg-card p-4">
+                    <div className="text-sm font-bold mb-3 text-primary flex items-center gap-2"><User className="h-4 w-4" /> Payment Information</div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <MetaRow label="Initiated By" value={viewing.initiated_by || "—"} />
+                      <MetaRow label="Verifier" value={viewing.verifier || "—"} />
+                      <MetaRow label="Created" value={new Date(viewing.created_at).toLocaleString()} />
+                      <MetaRow label="Last Modified" value={new Date(viewing.updated_at).toLocaleString()} />
+                      {viewing.remarks && <div className="col-span-2"><MetaRow label="Remarks" value={viewing.remarks} /></div>}
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border border-border overflow-hidden">
+                    <div className="bg-gradient-primary text-primary-foreground px-4 py-2 text-sm font-bold flex items-center justify-between">
+                      <span>Consignment Breakdown</span>
+                      <span className="text-xs opacity-90">{(viewing.consignment_details || []).length} item(s)</span>
+                    </div>
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted">
+                        <tr>
+                          <th className="p-2 text-left font-semibold">#</th>
+                          <th className="p-2 text-left font-semibold">Consignment No</th>
+                          <th className="p-2 text-right font-semibold">Bill Amount</th>
+                          <th className="p-2 text-right font-semibold">Discount</th>
+                          <th className="p-2 text-right font-semibold">Payment</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(viewing.consignment_details || []).length === 0 ? (
+                          <tr><td colSpan={5} className="p-6 text-center text-muted-foreground italic">No consignments</td></tr>
+                        ) : (viewing.consignment_details || []).map((r, i) => (
+                          <tr key={r.consignment_id} className="border-t border-border">
+                            <td className="p-2 text-muted-foreground">{i + 1}</td>
+                            <td className="p-2 font-medium">{r.bill_no}</td>
+                            <td className="p-2 text-right">¥ {Number(r.bill_amount).toLocaleString()}</td>
+                            <td className="p-2 text-right text-warning">¥ {Number(r.discount).toLocaleString()}</td>
+                            <td className="p-2 text-right font-bold text-emerald-600">¥ {Number(r.payment).toLocaleString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-border bg-card p-4">
+                  <div className="text-sm font-bold mb-3 text-primary flex items-center gap-2"><ReceiptIcon className="h-4 w-4" /> Receipt</div>
+                  {viewing.receipt_url ? (
+                    <a href={viewing.receipt_url} target="_blank" rel="noopener noreferrer" className="block">
+                      <img src={viewing.receipt_url} alt="receipt" className="w-full rounded-md border border-border hover:opacity-90 transition" />
+                      <div className="text-xs text-primary mt-2 underline">Open full size →</div>
+                    </a>
+                  ) : (
+                    <div className="text-xs text-muted-foreground italic py-8 text-center border border-dashed border-border rounded-md">No receipt uploaded</div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -390,6 +445,27 @@ const Payments = () => {
     </div>
   );
 };
+
+const StatTile = ({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: string; tone: "default" | "success" | "warning" | "destructive" }) => {
+  const tones: Record<string, string> = {
+    default: "bg-card border-border text-foreground",
+    success: "bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-400",
+    warning: "bg-warning/10 border-warning/40 text-warning",
+    destructive: "bg-destructive/10 border-destructive/40 text-destructive",
+  };
+  return (
+    <div className={cn("rounded-lg border-2 p-3", tones[tone])}>
+      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-semibold opacity-80">{icon} {label}</div>
+      <div className="text-lg font-extrabold mt-1">{value}</div>
+    </div>
+  );
+};
+const MetaRow = ({ label, value }: { label: string; value: string }) => (
+  <div>
+    <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</div>
+    <div className="text-sm font-medium mt-0.5">{value}</div>
+  </div>
+);
 
 const SF = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div><div className="mb-1 text-xs font-medium text-muted-foreground">{label}</div>{children}</div>

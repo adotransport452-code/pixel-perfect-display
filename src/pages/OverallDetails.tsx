@@ -369,15 +369,27 @@ function OriginTable({ origin }: { origin: Origin }) {
                       {expandedLhasa.has(r.id) && (
                         <div className="mt-2 p-2 rounded border border-border bg-muted/40 text-xs space-y-2 min-w-[260px]">
                           {(r.lhasa_containers || []).map((c, i) => (
-                            <div key={i} className="border-b border-border/50 pb-2 space-y-1">
+                            <div key={i} className="border-b border-border/50 pb-2 space-y-1.5">
                               <div className="flex items-center justify-between">
                                 <b>Container {i + 1}</b>
                                 <button onClick={() => removeLhasa(i)} className="text-destructive"><X className="h-3 w-3" /></button>
                               </div>
-                              <Input placeholder="Container name" value={c.container_name} onChange={(e) => patchLhasa(i, { container_name: e.target.value })} className="h-7 text-xs" />
-                              <Input type="date" value={c.dispatched_from_lhasa || ""} onChange={(e) => patchLhasa(i, { dispatched_from_lhasa: e.target.value || null })} className="h-7 text-xs" />
-                              <Input type="number" placeholder="Loaded CTN" value={c.loaded_ctn} onChange={(e) => patchLhasa(i, { loaded_ctn: Number(e.target.value) })} className="h-7 text-xs" />
-                              <Input type="date" value={c.arrived_at_nylam || ""} onChange={(e) => patchLhasa(i, { arrived_at_nylam: e.target.value || null })} className="h-7 text-xs" />
+                              <div>
+                                <Label className="text-[10px] text-muted-foreground">Container Name</Label>
+                                <Input placeholder="e.g. DB120" value={c.container_name} onChange={(e) => patchLhasa(i, { container_name: e.target.value })} className="h-7 text-xs" />
+                              </div>
+                              <div>
+                                <Label className="text-[10px] text-muted-foreground">Dispatched Date (from Lhasa)</Label>
+                                <Input type="date" value={c.dispatched_from_lhasa || ""} onChange={(e) => patchLhasa(i, { dispatched_from_lhasa: e.target.value || null })} className="h-7 text-xs" />
+                              </div>
+                              <div>
+                                <Label className="text-[10px] text-muted-foreground">Loaded CTN</Label>
+                                <Input type="number" placeholder="0" value={c.loaded_ctn} onChange={(e) => patchLhasa(i, { loaded_ctn: Number(e.target.value) })} className="h-7 text-xs" />
+                              </div>
+                              <div>
+                                <Label className="text-[10px] text-muted-foreground">Arrival Date (at Nylam)</Label>
+                                <Input type="date" value={c.arrived_at_nylam || ""} onChange={(e) => patchLhasa(i, { arrived_at_nylam: e.target.value || null })} className="h-7 text-xs" />
+                              </div>
                             </div>
                           ))}
                           <Button size="sm" variant="outline" className="w-full h-7 text-xs" onClick={addLhasa}><Plus className="h-3 w-3 mr-1" /> Add Lhasa Container</Button>
@@ -709,20 +721,38 @@ function InlineDestEditor({ index, c, statuses, onChange, onRemove }: {
   onChange: (p: Partial<DestContainer>) => void; onRemove: () => void;
 }) {
   return (
-    <div className="border-b border-border/50 pb-2 space-y-1">
+    <div className="border-b border-border/50 pb-2 space-y-1.5">
       <div className="flex items-center justify-between">
         <b>Container {index + 1}</b>
         <button onClick={onRemove} className="text-destructive"><X className="h-3 w-3" /></button>
       </div>
-      <Input placeholder="Nylam Container" value={c.nylam_container} onChange={(e) => onChange({ nylam_container: e.target.value })} className="h-7 text-xs" />
-      <Input type="date" value={c.dispatched_from_nylam || ""} onChange={(e) => onChange({ dispatched_from_nylam: e.target.value || null })} className="h-7 text-xs" />
-      <Input type="number" placeholder="Loaded CTN" value={c.loaded_ctn} onChange={(e) => onChange({ loaded_ctn: Number(e.target.value) })} className="h-7 text-xs" />
-      <Select value={c.status} onValueChange={(v) => onChange({ status: v })}>
-        <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-        <SelectContent>{statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-      </Select>
-      <Input type="number" placeholder="Received CTN" value={c.received_ctn ?? ""} onChange={(e) => onChange({ received_ctn: e.target.value === "" ? null : Number(e.target.value) })} className="h-7 text-xs" />
-      <Input type="date" value={c.arrival_date || ""} onChange={(e) => onChange({ arrival_date: e.target.value || null })} className="h-7 text-xs" />
+      <div>
+        <Label className="text-[10px] text-muted-foreground">Nylam Container</Label>
+        <Input placeholder="e.g. RXTU4565002" value={c.nylam_container} onChange={(e) => onChange({ nylam_container: e.target.value })} className="h-7 text-xs" />
+      </div>
+      <div>
+        <Label className="text-[10px] text-muted-foreground">Dispatched Date (from Nylam)</Label>
+        <Input type="date" value={c.dispatched_from_nylam || ""} onChange={(e) => onChange({ dispatched_from_nylam: e.target.value || null })} className="h-7 text-xs" />
+      </div>
+      <div>
+        <Label className="text-[10px] text-muted-foreground">Loaded CTN</Label>
+        <Input type="number" placeholder="0" value={c.loaded_ctn} onChange={(e) => onChange({ loaded_ctn: Number(e.target.value) })} className="h-7 text-xs" />
+      </div>
+      <div>
+        <Label className="text-[10px] text-muted-foreground">Status</Label>
+        <Select value={c.status} onValueChange={(v) => onChange({ status: v })}>
+          <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>{statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label className="text-[10px] text-muted-foreground">Received CTN</Label>
+        <Input type="number" placeholder="0" value={c.received_ctn ?? ""} onChange={(e) => onChange({ received_ctn: e.target.value === "" ? null : Number(e.target.value) })} className="h-7 text-xs" />
+      </div>
+      <div>
+        <Label className="text-[10px] text-muted-foreground">Arrival Date (at port)</Label>
+        <Input type="date" value={c.arrival_date || ""} onChange={(e) => onChange({ arrival_date: e.target.value || null })} className="h-7 text-xs" />
+      </div>
     </div>
   );
 }
@@ -880,6 +910,14 @@ function DetailTile({ icon, label, value, tone = "default" }: { icon: string; la
   );
 }
 
+function hasVal(v: any): boolean {
+  if (v === null || v === undefined) return false;
+  if (typeof v === "string") return v.trim() !== "" && v !== "-";
+  if (typeof v === "number") return !Number.isNaN(v);
+  if (Array.isArray(v)) return v.filter(Boolean).length > 0;
+  return true;
+}
+
 function ConsignmentDetailView({ r, origin }: { r: OverallDetail; origin: Origin }) {
   const lastTat = (r.tatopani_containers || [])[(r.tatopani_containers || []).length - 1];
   const lastKer = (r.kerung_containers || [])[(r.kerung_containers || []).length - 1];
@@ -888,6 +926,30 @@ function ConsignmentDetailView({ r, origin }: { r: OverallDetail; origin: Origin
   const missing = calcMissing(r);
   const remNylam = calcRemainingNylam(r);
   const isKerung = isKerungDestination(r.destination);
+  const nylamDates = (r.nylam_arrival_dates || []).filter(Boolean).join(", ");
+
+  type Tone = "default" | "amber" | "red" | "blue";
+  const tiles: { icon: string; label: string; value: any; tone?: Tone }[] = ([
+    { icon: "📅", label: "Date", value: r.date },
+    { icon: "📦", label: "Consignment No.", value: r.consignment_no, tone: "amber" },
+    { icon: "🏷️", label: "MARKA", value: r.marka, tone: "amber" },
+    { icon: "📦", label: "Total CTN", value: r.total_ctns ? String(r.total_ctns) : "", tone: "amber" },
+    { icon: "📦", label: "Loaded CTN", value: r.loaded_ctns ? String(r.loaded_ctns) : "" },
+    { icon: "📐", label: "CBM", value: r.cbm ? String(r.cbm) : "" },
+    { icon: "⚖️", label: "GW (KG)", value: r.gw ? String(r.gw) : "" },
+    { icon: "📍", label: "Destination", value: r.destination },
+    { icon: "🔖", label: "LOT No.", value: r.lot_no },
+    { icon: "🚚", label: `Dispatched from ${origin}`, value: r.dispatched_from_origin },
+    { icon: "📦", label: `${origin} Container`, value: r.origin_container },
+    { icon: "📍", label: "Arrival at Lhasa", value: r.arrival_at_lhasa },
+    { icon: "📍", label: "Arrival at Nylam", value: nylamDates },
+    { icon: "📦", label: "Received CTNS at Nylam", value: r.received_ctns_at_nylam ? String(r.received_ctns_at_nylam) : "" },
+    { icon: "👤", label: "Client", value: r.client, tone: "amber" },
+    { icon: "🛣️", label: "On the Way", value: onWay !== null ? String(onWay) : "", tone: "blue" },
+    { icon: "⚠️", label: "Missing CTN", value: missing !== null ? String(missing) : "", tone: "red" },
+    { icon: "📦", label: "Remaining CTN at Nylam", value: remNylam !== null ? String(remNylam) : "", tone: "amber" },
+    { icon: "📝", label: "Remarks", value: r.remarks },
+  ] as { icon: string; label: string; value: any; tone?: Tone }[]).filter((t) => hasVal(t.value));
 
   return (
     <div className="bg-background">
@@ -895,7 +957,7 @@ function ConsignmentDetailView({ r, origin }: { r: OverallDetail; origin: Origin
       <div className="bg-gradient-primary text-primary-foreground p-5 relative">
         <div className="text-2xl font-extrabold">{r.consignment_no}</div>
         <div className="text-xs opacity-90 mt-0.5">{r.marka || "—"} · {origin}</div>
-        <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
+        <div className="absolute right-5 top-1/2 -translate-y-1/2">
           <span className={cn("px-5 py-2 rounded-full text-sm font-semibold", statusPillCls(overallStatus))}>
             {overallStatus}
           </span>
@@ -904,62 +966,80 @@ function ConsignmentDetailView({ r, origin }: { r: OverallDetail; origin: Origin
 
       {/* Tile grid */}
       <div className={cn("p-4 grid grid-cols-2 md:grid-cols-3 gap-3", isKerung && "[&_.text-foreground]:text-destructive")}>
-        <DetailTile icon="📅" label="Date" value={r.date} />
-        <DetailTile icon="📦" label="Consignment No." value={r.consignment_no} tone="amber" />
-        <DetailTile icon="🏷️" label="MARKA" value={r.marka} tone="amber" />
-        <DetailTile icon="📦" label="Total CTN" value={String(r.total_ctns ?? 0)} tone="amber" />
-        <DetailTile icon="📐" label="CBM" value={String(r.cbm ?? 0)} />
-        <DetailTile icon="⚖️" label="GW (KG)" value={String(r.gw ?? 0)} />
-        <DetailTile icon="📍" label="Destination" value={r.destination} />
-        <DetailTile icon="🔖" label="LOT No." value={r.lot_no} />
-        <DetailTile icon="🚚" label={`Dispatched from ${origin}`} value={r.dispatched_from_origin} />
-        <DetailTile icon="📦" label={`${origin} Container`} value={r.origin_container} />
-        <DetailTile icon="📍" label="Arrival at Nylam" value={(r.nylam_arrival_dates || []).filter(Boolean).join(", ")} />
-        <DetailTile icon="👤" label="Client" value={r.client} tone="amber" />
-        <DetailTile icon="🛣️" label="On the Way" value={onWay === null ? "-" : String(onWay)} tone="blue" />
-        <DetailTile icon="⚠️" label="Missing CTN" value={missing === null ? "0" : String(missing)} tone="red" />
-        <DetailTile icon="📦" label="Remaining CTN at Nylam" value={remNylam === null ? "0" : String(remNylam)} tone="amber" />
-        <DetailTile icon="📝" label="Remarks" value={r.remarks || "-"} />
+        {tiles.map((t, i) => (
+          <DetailTile key={i} icon={t.icon} label={t.label} value={t.value} tone={t.tone} />
+        ))}
       </div>
+
+      {/* LHASA containers */}
+      {(r.lhasa_containers || []).length > 0 && (
+        <div className="px-4 pb-2">
+          <div className="rounded-md border border-purple-500/40 bg-purple-500/5 p-3">
+            <div className="font-bold text-purple-600 flex items-center gap-2 mb-2">
+              <span>🟣</span> LHASA ({(r.lhasa_containers || []).length} container{(r.lhasa_containers || []).length !== 1 ? "s" : ""})
+            </div>
+            {(r.lhasa_containers || []).map((c, i) => {
+              const items = [
+                { l: "Container", v: c.container_name },
+                { l: "Dispatched", v: c.dispatched_from_lhasa },
+                { l: "Loaded CTN", v: c.loaded_ctn ? String(c.loaded_ctn) : "" },
+                { l: "Arrived at Nylam", v: c.arrived_at_nylam },
+              ].filter((x) => hasVal(x.v));
+              if (items.length === 0) return null;
+              return (
+                <div key={i} className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs py-2 border-t border-border/50 first:border-t-0">
+                  <div className="col-span-2 font-semibold text-purple-700">Container {i + 1}</div>
+                  {items.map((it, j) => <div key={j}><span className="text-muted-foreground">{it.l}:</span> {it.v}</div>)}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* TATOPANI / KERUNG cards */}
       <div className="px-4 pb-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div className="rounded-md border border-warning/40 bg-warning/5 p-3">
-          <div className="font-bold text-warning flex items-center gap-2 mb-2">
-            <span>🔶</span> TATOPANI ({(r.tatopani_containers || []).length} rows)
-          </div>
-          {(r.tatopani_containers || []).length === 0 ? (
-            <div className="text-xs text-muted-foreground">No data</div>
-          ) : (r.tatopani_containers || []).map((c, i) => (
-            <div key={i} className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs py-2 border-t border-border/50 first:border-t-0">
-              <div><span className="text-muted-foreground">Dispatched:</span> {c.dispatched_from_nylam || "-"}</div>
-              <div><span className="text-muted-foreground">Loaded:</span> {c.loaded_ctn ?? "-"}</div>
-              <div><span className="text-muted-foreground">Container:</span> {c.nylam_container || "-"}</div>
-              <div><span className="text-muted-foreground">Status:</span> <span className="text-warning font-medium">{c.status}</span></div>
-              <div><span className="text-muted-foreground">Received:</span> {c.received_ctn ?? "-"}</div>
-              <div><span className="text-muted-foreground">Arrival:</span> {c.arrival_date || "-"}</div>
+        {(r.tatopani_containers || []).length > 0 && (
+          <div className="rounded-md border border-warning/40 bg-warning/5 p-3">
+            <div className="font-bold text-warning flex items-center gap-2 mb-2">
+              <span>🔶</span> TATOPANI ({(r.tatopani_containers || []).length} container{(r.tatopani_containers || []).length !== 1 ? "s" : ""})
             </div>
-          ))}
-        </div>
-
-        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3">
-          <div className="font-bold text-destructive flex items-center gap-2 mb-2">
-            <span>🔴</span> KERUNG ({(r.kerung_containers || []).length} rows)
+            {(r.tatopani_containers || []).map((c, i) => <DestContainerView key={i} c={c} index={i} tone="warning" />)}
           </div>
-          {(r.kerung_containers || []).length === 0 ? (
-            <div className="text-xs text-muted-foreground">No data</div>
-          ) : (r.kerung_containers || []).map((c, i) => (
-            <div key={i} className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs py-2 border-t border-border/50 first:border-t-0">
-              <div><span className="text-muted-foreground">Dispatched:</span> {c.dispatched_from_nylam || "-"}</div>
-              <div><span className="text-muted-foreground">Loaded:</span> {c.loaded_ctn ?? "-"}</div>
-              <div><span className="text-muted-foreground">Container:</span> {c.nylam_container || "-"}</div>
-              <div><span className="text-muted-foreground">Status:</span> <span className="text-destructive font-medium">{c.status}</span></div>
-              <div><span className="text-muted-foreground">Received:</span> {c.received_ctn ?? "-"}</div>
-              <div><span className="text-muted-foreground">Arrival at Kerung:</span> {c.arrival_date || "-"}</div>
+        )}
+        {(r.kerung_containers || []).length > 0 && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3">
+            <div className="font-bold text-destructive flex items-center gap-2 mb-2">
+              <span>🔴</span> KERUNG ({(r.kerung_containers || []).length} container{(r.kerung_containers || []).length !== 1 ? "s" : ""})
             </div>
-          ))}
-        </div>
+            {(r.kerung_containers || []).map((c, i) => <DestContainerView key={i} c={c} index={i} tone="destructive" />)}
+          </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+function DestContainerView({ c, index, tone }: { c: DestContainer; index: number; tone: "warning" | "destructive" }) {
+  const items = [
+    { l: "Dispatched", v: c.dispatched_from_nylam },
+    { l: "Loaded", v: c.loaded_ctn ? String(c.loaded_ctn) : "" },
+    { l: "Container", v: c.nylam_container },
+    { l: "Status", v: c.status, status: true },
+    { l: "Received", v: c.received_ctn != null ? String(c.received_ctn) : "" },
+    { l: "Arrival", v: c.arrival_date },
+  ].filter((x) => hasVal(x.v));
+  if (items.length === 0) return null;
+  const color = tone === "warning" ? "text-warning" : "text-destructive";
+  return (
+    <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs py-2 border-t border-border/50 first:border-t-0">
+      <div className={cn("col-span-2 font-semibold", color)}>Container {index + 1}</div>
+      {items.map((it, j) => (
+        <div key={j}>
+          <span className="text-muted-foreground">{it.l}:</span>{" "}
+          {it.status ? <span className={cn("font-medium", color)}>{it.v}</span> : it.v}
+        </div>
+      ))}
     </div>
   );
 }
