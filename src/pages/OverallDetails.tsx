@@ -928,7 +928,8 @@ function ConsignmentDetailView({ r, origin }: { r: OverallDetail; origin: Origin
   const isKerung = isKerungDestination(r.destination);
   const nylamDates = (r.nylam_arrival_dates || []).filter(Boolean).join(", ");
 
-  const tiles: { icon: string; label: string; value: any; tone?: "default" | "amber" | "red" | "blue" }[] = [
+  type Tone = "default" | "amber" | "red" | "blue";
+  const tiles: { icon: string; label: string; value: any; tone?: Tone }[] = ([
     { icon: "📅", label: "Date", value: r.date },
     { icon: "📦", label: "Consignment No.", value: r.consignment_no, tone: "amber" },
     { icon: "🏷️", label: "MARKA", value: r.marka, tone: "amber" },
@@ -948,7 +949,7 @@ function ConsignmentDetailView({ r, origin }: { r: OverallDetail; origin: Origin
     { icon: "⚠️", label: "Missing CTN", value: missing !== null ? String(missing) : "", tone: "red" },
     { icon: "📦", label: "Remaining CTN at Nylam", value: remNylam !== null ? String(remNylam) : "", tone: "amber" },
     { icon: "📝", label: "Remarks", value: r.remarks },
-  ].filter((t) => hasVal(t.value));
+  ] as { icon: string; label: string; value: any; tone?: Tone }[]).filter((t) => hasVal(t.value));
 
   return (
     <div className="bg-background">
