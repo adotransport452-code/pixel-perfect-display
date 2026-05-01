@@ -287,11 +287,11 @@ function FragmentItem({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function TrailStep({ title, tone, done, lines }: {
-  title: string; tone: "success" | "purple" | "primary" | "warning" | "destructive" | "muted"; done?: boolean; lines: string[];
+function TrailStep({ title, tone, done, lines, badge }: {
+  title: string; tone: "success" | "purple" | "primary" | "warning" | "destructive" | "muted"; done?: boolean; lines: string[]; badge?: string;
 }) {
   const tones: Record<string, string> = {
-    success: "bg-success/10 border-success/40 text-success-foreground",
+    success: "bg-success/10 border-success/40",
     purple: "bg-purple-500/10 border-purple-500/40",
     primary: "bg-primary/10 border-primary/40",
     warning: "bg-warning/10 border-warning/40",
@@ -302,11 +302,19 @@ function TrailStep({ title, tone, done, lines }: {
     success: "text-success", purple: "text-purple-600", primary: "text-primary",
     warning: "text-warning", destructive: "text-destructive", muted: "text-muted-foreground",
   };
+  const badgeBg: Record<string, string> = {
+    success: "bg-success/20 text-success", purple: "bg-purple-500/20 text-purple-700",
+    primary: "bg-primary/20 text-primary", warning: "bg-warning/20 text-warning",
+    destructive: "bg-destructive/20 text-destructive", muted: "bg-muted text-muted-foreground",
+  };
   return (
-    <div className={cn("rounded-lg border-2 p-3 min-w-[180px] max-w-[220px]", tones[tone])}>
-      <div className={cn("text-xs font-bold mb-1 flex items-center gap-1", head[tone])}>
-        {done && <CheckCircle2 className="h-3 w-3" />} {title}
-      </div>
+    <div className={cn("rounded-lg border-2 p-3 min-w-[180px] max-w-[230px] flex flex-col items-center text-center", tones[tone])}>
+      <div className={cn("text-xs font-bold mb-2", head[tone])}>{title}</div>
+      {badge && (
+        <div className={cn("inline-flex items-center gap-1 px-3 py-1 rounded-md text-sm font-bold mb-2", badgeBg[tone])}>
+          {done && <CheckCircle2 className="h-3.5 w-3.5" />} {badge}
+        </div>
+      )}
       {lines.filter(Boolean).map((l, i) => <div key={i} className="text-[11px] text-foreground/80 leading-tight">{l}</div>)}
     </div>
   );
