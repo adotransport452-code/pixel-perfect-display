@@ -922,12 +922,12 @@ function hasVal(v: any): boolean {
 }
 
 function ConsignmentDetailView({ r, origin }: { r: OverallDetail; origin: Origin }) {
-  const lastTat = (r.tatopani_containers || [])[(r.tatopani_containers || []).length - 1];
-  const lastKer = (r.kerung_containers || [])[(r.kerung_containers || []).length - 1];
-  const overallStatus = lastKer?.status || lastTat?.status || r.status || "Pending";
+  const overallStatus = r.status || "Pending";
   const onWay = calcOnTheWay(r);
   const missing = calcMissing(r);
   const remNylam = calcRemainingNylam(r);
+  const remOrigin = calcRemainingOrigin(r);
+  const remLhasa = calcRemainingLhasa(r);
   const isKerung = isKerungDestination(r.destination);
   const nylamDates = (r.nylam_arrival_dates || []).filter(Boolean).join(", ");
 
@@ -948,23 +948,27 @@ function ConsignmentDetailView({ r, origin }: { r: OverallDetail; origin: Origin
     { icon: "📍", label: "Arrival at Nylam", value: nylamDates },
     { icon: "📦", label: "Received CTNS at Nylam", value: r.received_ctns_at_nylam ? String(r.received_ctns_at_nylam) : "" },
     { icon: "👤", label: "Client", value: r.client, tone: "amber" },
-    { icon: "🛣️", label: "On the Way", value: onWay !== null ? String(onWay) : "", tone: "blue" },
-    { icon: "⚠️", label: "Missing CTN", value: missing !== null ? String(missing) : "", tone: "red" },
-    { icon: "📦", label: "Remaining CTN at Nylam", value: remNylam !== null ? String(remNylam) : "", tone: "amber" },
     { icon: "📝", label: "Remarks", value: r.remarks },
   ] as { icon: string; label: string; value: any; tone?: Tone }[]).filter((t) => hasVal(t.value));
 
+  // Highlighted (amber/red/blue) tiles for Remaining/On the Way/Missing — only when filled
+  const highlightTiles: { icon: string; label: string; value: any; tone: Tone }[] = ([
+    { icon: "📦", label: `Remaining CTN at ${origin}`, value: remOrigin !== null ? String(remOrigin) : "", tone: "amber" },
+    { icon: "📦", label: "Remaining CTN at Lhasa", value: remLhasa !== null ? String(remLhasa) : "", tone: "amber" },
+    { icon: "📦", label: "Remaining CTN at Nylam", value: remNylam !== null ? String(remNylam) : "", tone: "amber" },
+    { icon: "🛣️", label: "On the Way", value: onWay !== null ? String(onWay) : "", tone: "blue" },
+    { icon: "⚠️", label: "Missing CTN", value: missing !== null ? String(missing) : "", tone: "red" },
+  ] as { icon: string; label: string; value: any; tone: Tone }[]).filter((t) => hasVal(t.value));
+
   return (
     <div className="bg-background">
-      {/* Blue header */}
-      <div className="bg-gradient-primary text-primary-foreground p-5 relative">
-        <div className="text-2xl font-extrabold">{r.consignment_no}</div>
-        <div className="text-xs opacity-90 mt-0.5">{r.marka || "—"} · {origin}</div>
-        <div className="absolute right-5 top-1/2 -translate-y-1/2">
-          <span className={cn("px-5 py-2 rounded-full text-sm font-semibold", statusPillCls(overallStatus))}>
-            {overallStatus}
-          </span>
-        </div>
+      {/* Blue header — status at top center */}
+      <div className="bg-gradient-primary text-primary-foreground p-5 flex flex-col items-center text-center gap-2">
+        <span className={cn("px-6 py-2 rounded-full text-sm font-bold shadow-md", statusPillCls(overallStatus))}>
+          {overallStatus}
+        </span>
+        <div className="text-2xl font-extrabold mt-1">{r.consignment_no}</div>
+        <div className="text-xs opacity-90">{r.marka || "—"} · {origin}</div>
       </div>
 
       {/* Tile grid */}
@@ -973,6 +977,22 @@ function ConsignmentDetailView({ r, origin }: { r: OverallDetail; origin: Origin
           <DetailTile key={i} icon={t.icon} label={t.label} value={t.value} tone={t.tone} />
         ))}
       </div>
+
+      {/* Highlighted summary tiles */}
+      {highlightTiles.length > 0 && (
+        <div className="px-4 pb-2">
+          <div className="rounded-lg border-2 border-warning/50 bg-warning/5 p-3">
+            <div className="text-xs font-bold uppercase tracking-wider text-warning mb-2 flex items-center gap-2">
+              <span>⚡</span> CTN Status Highlights
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {highlightTiles.map((t, i) => (
+                <DetailTile key={i} icon={t.icon} label={t.label} value={t.value} tone={t.tone} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* LHASA containers */}
       {(r.lhasa_containers || []).length > 0 && (
