@@ -251,19 +251,38 @@ function TrackingCard({ r }: { r: OverallDetail }) {
       </div>
 
       {/* CTN Summary */}
-      <div className="p-4 border-b border-border bg-muted/20">
-        <div className="flex items-center gap-2 text-sm font-semibold mb-2"><Package className="h-4 w-4" /> CTN Flow Summary</div>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
-          <Stat label={`Loaded at ${r.origin}`} value={loadedCtns || "—"} />
-          <Stat label="Loaded at Lhasa" value={loadedLhasa || "—"} tone="purple" />
-          <Stat label="Received at Nylam" value={receivedNylam || "—"} tone="primary" />
-          {(r.tatopani_containers || []).length > 0 && (
-            <Stat label="Tatopani (L / R)" value={`${loadedTat} / ${receivedTat}`} tone="warning" />
-          )}
-          {(r.kerung_containers || []).length > 0 && (
-            <Stat label="Kerung (L / R)" value={`${loadedKer} / ${receivedKer}`} tone="destructive" />
-          )}
+      <div className="p-4 border-b border-border bg-muted/20 space-y-3">
+        <div>
+          <div className="flex items-center gap-2 text-sm font-semibold mb-2"><Package className="h-4 w-4" /> CTN Flow Summary</div>
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-2 text-xs">
+            <Stat label="Total CTN" value={totalCtn || "—"} />
+            <Stat label={`Loaded at ${r.origin}`} value={loadedCtns || "—"} />
+            <Stat label="Loaded at Lhasa" value={loadedLhasa || "—"} tone="purple" />
+            <Stat label="Received at Nylam" value={receivedNylam || "—"} tone="primary" />
+            {(r.tatopani_containers || []).length > 0 && (
+              <Stat label="Tatopani (L / R)" value={`${loadedTat} / ${receivedTat}`} tone="warning" />
+            )}
+            {(r.kerung_containers || []).length > 0 && (
+              <Stat label="Kerung (L / R)" value={`${loadedKer} / ${receivedKer}`} tone="destructive" />
+            )}
+          </div>
         </div>
+
+        {/* Highlighted CTN Status (only shows fields that are filled) */}
+        {(remOrigin !== null || remLhasa !== null || remNylam !== null || onWay !== null || missing !== null) && (
+          <div className="rounded-lg border-2 border-warning/50 bg-warning/5 p-3">
+            <div className="text-xs font-bold uppercase tracking-wider text-warning mb-2 flex items-center gap-2">
+              <AlertTriangle className="h-3.5 w-3.5" /> CTN Status Highlights
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+              {remOrigin !== null && <Stat label={`Remaining CTN at ${r.origin}`} value={remOrigin} tone="warning" />}
+              {remLhasa !== null && <Stat label="Remaining CTN at Lhasa" value={remLhasa} tone="warning" />}
+              {remNylam !== null && <Stat label="Remaining CTN at Nylam" value={remNylam} tone="warning" />}
+              {onWay !== null && <Stat label="On the Way" value={onWay} tone="primary" />}
+              {missing !== null && <Stat label="Missing CTN" value={missing} tone="destructive" />}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* LHASA Details */}
