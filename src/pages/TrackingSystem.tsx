@@ -85,10 +85,35 @@ function TrackingCard({ r }: { r: OverallDetail }) {
   const receivedTat = (r.tatopani_containers || []).reduce((s, c) => s + (Number(c.received_ctn) || 0), 0);
   const loadedKer = (r.kerung_containers || []).reduce((s, c) => s + (Number(c.loaded_ctn) || 0), 0);
   const receivedKer = (r.kerung_containers || []).reduce((s, c) => s + (Number(c.received_ctn) || 0), 0);
-  const lastTat = (r.tatopani_containers || [])[(r.tatopani_containers || []).length - 1];
-  const lastKer = (r.kerung_containers || [])[(r.kerung_containers || []).length - 1];
-  const lastDest = lastKer || lastTat;
-  const overallStatus = lastDest?.status || r.status;
+
+  // Status comes from Overall Details "status" field directly
+  const overallStatus = r.status || "Pending";
+
+  // Calculations matching OverallDetails (return null when not yet applicable)
+  const remOrigin = (() => {
+    if (!loadedCtns) return null;
+    return Math.max(0, totalCtn - loadedCtns);
+  })();
+  const remLhasa = (() => {
+    if (!receivedNylam) return null;
+    return loadedLhasa - receivedNylam;
+  })();
+  const remNylam = (() => {
+    if (loadedTat <= 0 && loadedKer <= 0) return null;
+    return receivedNylam - loadedTat - loadedKer;
+  })();
+  const onWay = (() => {
+    let total = 0; let any = false;
+    for (const c of r.tatopani_containers || []) if (c.status === "On the way to Tatopani") { total += Number(c.loaded_ctn) || 0; any = true; }
+    for (const c of r.kerung_containers || []) if (c.status === "On the way to Kerung") { total += Number(c.loaded_ctn) || 0; any = true; }
+    return any ? total : null;
+  })();
+  const missing = (() => {
+    let total = 0; let any = false;
+    for (const c of r.tatopani_containers || []) if (c.status === "At Tatopani port" && c.received_ctn != null) { total += (Number(c.loaded_ctn) || 0) - Number(c.received_ctn); any = true; }
+    for (const c of r.kerung_containers || []) if (c.status === "At Kerung port" && c.received_ctn != null) { total += (Number(c.loaded_ctn) || 0) - Number(c.received_ctn); any = true; }
+    return any ? total : null;
+  })();
 
   return (
     <Card className="overflow-hidden border border-border shadow-card">
@@ -226,19 +251,38 @@ function TrackingCard({ r }: { r: OverallDetail }) {
       </div>
 
       {/* CTN Summary */}
-      <div className="p-4 border-b border-border bg-muted/20">
-        <div className="flex items-center gap-2 text-sm font-semibold mb-2"><Package className="h-4 w-4" /> CTN Flow Summary</div>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
-          <Stat label={`Loaded at ${r.origin}`} value={loadedCtns || "—"} />
-          <Stat label="Loaded at Lhasa" value={loadedLhasa || "—"} tone="purple" />
-          <Stat label="Received at Nylam" value={receivedNylam || "—"} tone="primary" />
-          {(r.tatopani_containers || []).length > 0 && (
-            <Stat label="Tatopani (L / R)" value={`${loadedTat} / ${receivedTat}`} tone="warning" />
-          )}
-          {(r.kerung_containers || []).length > 0 && (
-            <Stat label="Kerung (L / R)" value={`${loadedKer} / ${receivedKer}`} tone="destructive" />
-          )}
+      <div className="p-4 border-b border-border bg-muted/20 space-y-3">
+        <div>
+          <div className="flex items-center gap-2 text-sm font-semibold mb-2"><Package className="h-4 w-4" /> CTN Flow Summary</div>
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-2 text-xs">
+            <Stat label="Total CTN" value={totalCtn || "—"} />
+            <Stat label={`Loaded at ${r.origin}`} value={loadedCtns || "—"} />
+            <Stat label="Loaded at Lhasa" value={loadedLhasa || "—"} tone="purple" />
+            <Stat label="Received at Nylam" value={receivedNylam || "—"} tone="primary" />
+            {(r.tatopani_containers || []).length > 0 && (
+              <Stat label="Tatopani (L / R)" value={`${loadedTat} / ${receivedTat}`} tone="warning" />
+            )}
+            {(r.kerung_containers || []).length > 0 && (
+              <Stat label="Kerung (L / R)" value={`${loadedKer} / ${receivedKer}`} tone="destructive" />
+            )}
+          </div>
         </div>
+
+        {/* Highlighted CTN Status (only shows fields that are filled) */}
+        {(remOrigin !== null || remLhasa !== null || remNylam !== null || onWay !== null || missing !== null) && (
+          <div className="rounded-lg border-2 border-warning/50 bg-warning/5 p-3">
+            <div className="text-xs font-bold uppercase tracking-wider text-warning mb-2 flex items-center gap-2">
+              <AlertTriangle className="h-3.5 w-3.5" /> CTN Status Highlights
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+              {remOrigin !== null && <Stat label={`Remaining CTN at ${r.origin}`} value={remOrigin} tone="warning" />}
+              {remLhasa !== null && <Stat label="Remaining CTN at Lhasa" value={remLhasa} tone="warning" />}
+              {remNylam !== null && <Stat label="Remaining CTN at Nylam" value={remNylam} tone="warning" />}
+              {onWay !== null && <Stat label="On the Way" value={onWay} tone="primary" />}
+              {missing !== null && <Stat label="Missing CTN" value={missing} tone="destructive" />}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* LHASA Details */}
