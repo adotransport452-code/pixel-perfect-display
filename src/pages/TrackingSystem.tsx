@@ -106,9 +106,9 @@ function TrackingCard({ r }: { r: OverallDetail }) {
 
       {/* Shipment Trail */}
       <div className="p-4 border-b border-border">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3 gap-3">
           <div className="flex items-center gap-2 text-sm font-semibold"><Truck className="h-4 w-4" /> Shipment Trail</div>
-          <span className={cn("inline-flex px-3 py-1 rounded-full text-xs font-medium border", statusBadgeColor(overallStatus))}>{overallStatus}</span>
+          <span className={cn("inline-flex px-5 py-2 rounded-full text-base md:text-lg font-bold border-2", statusBadgeColor(overallStatus))}>{overallStatus}</span>
         </div>
         <div className="rounded-lg border border-border bg-muted/10 p-3">
           <div className="text-xs font-bold mb-2">{r.consignment_no} • {r.marka || "—"}</div>
@@ -128,36 +128,62 @@ function TrackingCard({ r }: { r: OverallDetail }) {
                 ]}
               />
               <Arrow />
-              {/* Lhasa containers */}
-              {(r.lhasa_containers || []).length === 0 ? (
-                <TrailStep title="Lhasa" tone="muted" badge="Pending" lines={[r.arrival_at_lhasa ? `Arrived: ${r.arrival_at_lhasa}` : ""]} />
+
+              {/* Lhasa Arrived (only when arrival_at_lhasa is filled) */}
+              {r.arrival_at_lhasa ? (
+                <>
+                  <TrailStep
+                    title="Lhasa Arrived"
+                    tone="purple"
+                    done
+                    badge={`✓ Arrived`}
+                    lines={[`📅 ${r.arrival_at_lhasa}`]}
+                  />
+                  <Arrow />
+                </>
               ) : (
-                (r.lhasa_containers || []).map((c, i) => (
+                <>
+                  <TrailStep title="Lhasa" tone="muted" badge="Awaiting" lines={[]} />
+                  <Arrow />
+                </>
+              )}
+
+              {/* Lhasa containers — only those actually loaded/dispatched */}
+              {(r.lhasa_containers || [])
+                .filter((c) => c.container_name || c.dispatched_from_lhasa || c.loaded_ctn)
+                .map((c, i) => (
                   <FragmentItem key={`l-${i}`}>
                     <TrailStep
                       title={`Lhasa Container ${i + 1}`}
                       tone="purple"
-                      done={!!c.arrived_at_nylam}
-                      badge={c.arrived_at_nylam ? "✓ Arrived" : "In transit"}
+                      done={!!c.dispatched_from_lhasa}
+                      badge={c.dispatched_from_lhasa ? "✓ Dispatched" : "Loading"}
                       lines={[
-                        c.arrived_at_nylam ? `📅 Arrived: ${c.arrived_at_nylam}` : "",
                         c.container_name ? `Container: ${c.container_name}` : "",
-                        c.dispatched_from_lhasa ? `Dispatched: ${c.dispatched_from_lhasa}` : "",
+                        c.dispatched_from_lhasa ? `📅 Dispatched: ${c.dispatched_from_lhasa}` : "",
                         c.loaded_ctn ? `Loaded: ${c.loaded_ctn} CTN` : "",
+                        c.arrived_at_nylam ? `Arrived Nylam: ${c.arrived_at_nylam}` : "",
                       ]}
                     />
                     <Arrow />
                   </FragmentItem>
-                ))
-              )}
-              {/* Nylam */}
-              <TrailStep
-                title="At Nylam"
-                tone="primary"
-                done={receivedNylam > 0}
-                badge={receivedNylam > 0 ? `Received ${receivedNylam} CTN` : "Awaiting"}
-                lines={(r.nylam_arrival_dates || []).filter(Boolean).map((d) => `📅 ${d}`)}
-              />
+                ))}
+
+              {/* Nylam — Awaiting if no nylam_arrival_dates, else Received */}
+              {(() => {
+                const dates = (r.nylam_arrival_dates || []).filter(Boolean);
+                const hasArrived = dates.length > 0 || receivedNylam > 0;
+                return (
+                  <TrailStep
+                    title="At Nylam"
+                    tone={hasArrived ? "primary" : "muted"}
+                    done={hasArrived}
+                    badge={hasArrived ? `Received ${receivedNylam || 0} CTN` : "Awaiting"}
+                    lines={dates.map((d) => `📅 ${d}`)}
+                  />
+                );
+              })()}
+
               {/* Tatopani */}
               {(r.tatopani_containers || []).map((c, i) => (
                 <FragmentItem key={`t-${i}`}>
