@@ -85,10 +85,35 @@ function TrackingCard({ r }: { r: OverallDetail }) {
   const receivedTat = (r.tatopani_containers || []).reduce((s, c) => s + (Number(c.received_ctn) || 0), 0);
   const loadedKer = (r.kerung_containers || []).reduce((s, c) => s + (Number(c.loaded_ctn) || 0), 0);
   const receivedKer = (r.kerung_containers || []).reduce((s, c) => s + (Number(c.received_ctn) || 0), 0);
-  const lastTat = (r.tatopani_containers || [])[(r.tatopani_containers || []).length - 1];
-  const lastKer = (r.kerung_containers || [])[(r.kerung_containers || []).length - 1];
-  const lastDest = lastKer || lastTat;
-  const overallStatus = lastDest?.status || r.status;
+
+  // Status comes from Overall Details "status" field directly
+  const overallStatus = r.status || "Pending";
+
+  // Calculations matching OverallDetails (return null when not yet applicable)
+  const remOrigin = (() => {
+    if (!loadedCtns) return null;
+    return Math.max(0, totalCtn - loadedCtns);
+  })();
+  const remLhasa = (() => {
+    if (!receivedNylam) return null;
+    return loadedLhasa - receivedNylam;
+  })();
+  const remNylam = (() => {
+    if (loadedTat <= 0 && loadedKer <= 0) return null;
+    return receivedNylam - loadedTat - loadedKer;
+  })();
+  const onWay = (() => {
+    let total = 0; let any = false;
+    for (const c of r.tatopani_containers || []) if (c.status === "On the way to Tatopani") { total += Number(c.loaded_ctn) || 0; any = true; }
+    for (const c of r.kerung_containers || []) if (c.status === "On the way to Kerung") { total += Number(c.loaded_ctn) || 0; any = true; }
+    return any ? total : null;
+  })();
+  const missing = (() => {
+    let total = 0; let any = false;
+    for (const c of r.tatopani_containers || []) if (c.status === "At Tatopani port" && c.received_ctn != null) { total += (Number(c.loaded_ctn) || 0) - Number(c.received_ctn); any = true; }
+    for (const c of r.kerung_containers || []) if (c.status === "At Kerung port" && c.received_ctn != null) { total += (Number(c.loaded_ctn) || 0) - Number(c.received_ctn); any = true; }
+    return any ? total : null;
+  })();
 
   return (
     <Card className="overflow-hidden border border-border shadow-card">
