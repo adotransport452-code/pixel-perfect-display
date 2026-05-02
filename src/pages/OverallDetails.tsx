@@ -456,7 +456,10 @@ function OriginTable({ origin }: { origin: Origin }) {
                     <td className={cn("px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 align-top", rowText)}><Input value={r.remarks || ""} onChange={(e) => patchRow({ remarks: e.target.value })} className="h-7 text-xs w-[180px]" /></td>
                     <td className={cellCls}>{r.created_by || "—"}</td>
                     <td className={cellCls}>{r.updated_by || "—"}</td>
-                    <td className={cellCls}>{new Date(r.updated_at).toLocaleString()}</td>
+                    <td className={cellCls}>
+                      <div className="font-semibold">{new Date(r.updated_at).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "2-digit", year: "numeric" })}</div>
+                      <div className="text-muted-foreground">{new Date(r.updated_at).toLocaleTimeString()}</div>
+                    </td>
                     <td className="px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 sticky right-0 z-10 align-top">
                       <ActionButtons
                         onView={() => setViewing(r)}
