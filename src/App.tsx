@@ -38,15 +38,15 @@ const App = () => (
                 <AppLayout>
                   <Routes>
                     <Route path="/" element={<AuthGate require="dashboard"><Index /></AuthGate>} />
-                    <Route path="/stations" element={<AuthGate require="settings"><Stations /></AuthGate>} />
-                    <Route path="/clients" element={<AuthGate require="settings"><Clients /></AuthGate>} />
-                    <Route path="/consignments" element={<AuthGate require="reports"><Consignments /></AuthGate>} />
-                    <Route path="/shipments" element={<AuthGate require="tracking"><Shipments /></AuthGate>} />
-                    <Route path="/shipments/:id" element={<AuthGate require="tracking"><ShipmentDetails /></AuthGate>} />
-                    <Route path="/payments" element={<AuthGate require="billing"><Payments /></AuthGate>} />
-                    <Route path="/delivery-receipts" element={<AuthGate require="settings"><DeliveryReceipts /></AuthGate>} />
-                    <Route path="/overall-details" element={<AuthGate require="tracking"><OverallDetails /></AuthGate>} />
-                    <Route path="/tracking-system" element={<AuthGate require="tracking"><TrackingSystem /></AuthGate>} />
+                    <Route path="/stations" element={<AuthGate require="stations"><Stations /></AuthGate>} />
+                    <Route path="/clients" element={<AuthGate require="clients"><Clients /></AuthGate>} />
+                    <Route path="/consignments" element={<AuthGate require="consignments"><Consignments /></AuthGate>} />
+                    <Route path="/shipments" element={<AuthGate require="shipments"><Shipments /></AuthGate>} />
+                    <Route path="/shipments/:id" element={<AuthGate require="shipments"><ShipmentDetails /></AuthGate>} />
+                    <Route path="/payments" element={<AuthGate require="payments"><Payments /></AuthGate>} />
+                    <Route path="/delivery-receipts" element={<AuthGate require="delivery_receipts"><DeliveryReceipts /></AuthGate>} />
+                    <Route path="/overall-details" element={<AuthGate require="overall_details"><OverallDetails /></AuthGate>} />
+                    <Route path="/tracking-system" element={<AuthGate require="tracking_system"><TrackingSystem /></AuthGate>} />
                     <Route path="/admin/users" element={<AdminOnly><UsersAdmin /></AdminOnly>} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
