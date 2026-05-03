@@ -31,12 +31,16 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border p-3">
-        <div className="flex items-center justify-center">
+      <SidebarHeader className="border-b border-sidebar-border p-2">
+        <div className="flex items-center justify-center w-full">
           {collapsed ? (
-            <img src={adoLogo} alt="ADO" className="h-8 w-8 object-contain" />
+            <img src={adoLogo} alt="ADO" className="h-9 w-9 object-contain" />
           ) : (
-            <img src={adoLogo} alt="ADO International Transport Nepal" className="h-12 w-auto object-contain" />
+            <img
+              src={adoLogo}
+              alt="ADO International Transport Nepal"
+              className="w-full h-auto max-h-20 object-contain"
+            />
           )}
         </div>
       </SidebarHeader>
