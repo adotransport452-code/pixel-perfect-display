@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { adminExists, bootstrapFirstAdmin } from "@/lib/admin";
+import adoLogo from "@/assets/ado-logo.png";
 
 export default function LoginPage() {
   const { signIn, user, loading } = useAuth();
@@ -60,9 +61,11 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md shadow-elegant">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-primary text-primary-foreground font-bold text-xl shadow-elegant">
-            A
-          </div>
+          <img
+            src={adoLogo}
+            alt="ADO Transport logo"
+            className="mx-auto mb-4 w-full max-w-xs h-auto object-contain"
+          />
           <CardTitle>ADO Transport · Logistics OS</CardTitle>
           <CardDescription>
             {needsBootstrap
