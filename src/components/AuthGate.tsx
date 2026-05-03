@@ -38,7 +38,7 @@ export function AuthGate({ children, require }: { children: ReactNode; require?:
       <p className="mt-2 text-muted-foreground">Contact your administrator to restore access.</p>
     </div></div>
   );
-  if (require && role !== "admin" && !permissions[require]) return (
+  if (require && role !== "admin" && !hasAccess(permissions, require)) return (
     <div className="flex min-h-[60vh] items-center justify-center"><div className="text-center">
       <h1 className="text-2xl font-bold">Access denied</h1>
       <p className="mt-2 text-muted-foreground">You do not have permission to view this section.</p>
