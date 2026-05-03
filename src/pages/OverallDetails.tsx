@@ -964,7 +964,7 @@ function ConsignmentDetailView({ r, origin }: { r: OverallDetail; origin: Origin
     <div className="bg-background">
       {/* Blue header — status at top center */}
       <div className="bg-gradient-primary text-primary-foreground p-5 flex flex-col items-center text-center gap-2">
-        <span className={cn("px-6 py-2 rounded-full text-sm font-bold shadow-md", statusPillCls(overallStatus))}>
+        <span className="px-6 py-2 rounded-full text-sm font-bold shadow-md bg-white text-foreground border-2 border-white">
           {overallStatus}
         </span>
         <div className="text-2xl font-extrabold mt-1">{r.consignment_no}</div>
