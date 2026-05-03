@@ -2,6 +2,24 @@ import { ReactNode, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth, type Permissions } from "@/contexts/AuthContext";
 
+// Map legacy grouped permission keys to the new per-section keys.
+// A user is granted access if they have EITHER the legacy flag OR any of the
+// per-section flags it expanded into. This keeps the gate aligned with the
+// actual sections shown in the sidebar.
+const PERM_ALIASES: Partial<Record<keyof Permissions, (keyof Permissions)[]>> = {
+  settings: ["stations", "clients", "delivery_receipts"],
+  tracking: ["shipments", "overall_details", "tracking_system"],
+  reports: ["consignments"],
+  billing: ["payments"],
+};
+
+function hasAccess(permissions: Permissions, key: keyof Permissions): boolean {
+  if (permissions[key]) return true;
+  const aliases = PERM_ALIASES[key];
+  if (aliases && aliases.some((k) => permissions[k])) return true;
+  return false;
+}
+
 export function AuthGate({ children, require }: { children: ReactNode; require?: keyof Permissions; }) {
   const { loading, user, role, permissions, profile } = useAuth();
   const navigate = useNavigate();
