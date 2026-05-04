@@ -266,8 +266,8 @@ function OriginTable({ origin }: { origin: Origin }) {
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search consignment, MARKA, LOT, client…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 w-72" />
         </div>
-        <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImport(f); e.target.value = ""; }} />
-        <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}><Upload className="h-4 w-4 mr-1" /> Smart Import</Button>
+        <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportFile(f); e.target.value = ""; }} />
+        <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}><Upload className="h-4 w-4 mr-1" /> Smart Import</Button>
         <Button variant="outline" size="sm" onClick={handleExport}><Download className="h-4 w-4 mr-1" /> Export</Button>
         <Button size="sm" onClick={() => { setEditing(null); setEditOpen(true); }}><Plus className="h-4 w-4 mr-1" /> Add New</Button>
         <Button variant={selectMode ? "default" : "outline"} size="sm" onClick={() => { setSelectMode((v) => !v); setSelectedIds([]); }}>
