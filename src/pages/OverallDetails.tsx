@@ -191,28 +191,72 @@ function OriginTable({ origin }: { origin: Origin }) {
     exportToExcel(flat, `overall-details-${origin.toLowerCase()}`);
   };
 
-  const handleImport = async (file: File) => {
+  const normalizeImportRows = (parsed: any[]) => {
+    const getCI = (obj: any, ...keys: string[]) => {
+      const map: Record<string, any> = {};
+      for (const k of Object.keys(obj)) map[k.toLowerCase().trim()] = obj[k];
+      for (const k of keys) {
+        const v = map[k.toLowerCase().trim()];
+        if (v !== undefined && v !== null && String(v) !== "") return v;
+      }
+      return "";
+    };
+    const toDate = (v: any) => {
+      if (!v) return null;
+      const s = String(v).trim();
+      if (!s) return null;
+      const d = new Date(s);
+      if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+      return null;
+    };
+    return parsed.map((p: any) => ({
+      ...emptyRow(origin),
+      consignment_no: String(getCI(p, "Consignment No", "consignment_no", "Consignment", "Bill No") || ""),
+      marka: String(getCI(p, "MARKA", "marka", "Brand") || ""),
+      total_ctns: Number(String(getCI(p, "Total CTNS", "total_ctns", "Total CTN")).replace(/[^\d.\-]/g, "")) || 0,
+      loaded_ctns: Number(String(getCI(p, "Loaded CTNS", "loaded_ctns", "Loaded CTN")).replace(/[^\d.\-]/g, "")) || 0,
+      cbm: Number(String(getCI(p, "CBM", "cbm")).replace(/[^\d.\-]/g, "")) || 0,
+      gw: Number(String(getCI(p, "GW", "gw", "Weight")).replace(/[^\d.\-]/g, "")) || 0,
+      destination: String(getCI(p, "Destination", "destination") || "TATOPANI"),
+      lot_no: String(getCI(p, "LOT No", "lot_no", "Lot No") || ""),
+      date: toDate(getCI(p, "Date", "date")),
+      client: String(getCI(p, "Client", "client") || ""),
+      remarks: String(getCI(p, "Remarks", "remarks") || ""),
+      created_by: userTag, updated_by: userTag,
+    })).filter((r) => r.consignment_no);
+  };
+
+  const runImport = async (parsed: any[]) => {
+    if (!parsed.length) { toast.error("No rows detected"); return; }
+    setImportBusy(true);
     try {
-      const parsed = await parseExcelFile(file);
-      const inserts = parsed.map((p: any) => ({
-        ...emptyRow(origin),
-        consignment_no: String(p["Consignment No"] || p.consignment_no || ""),
-        marka: p.MARKA || p.marka || "",
-        total_ctns: Number(p["Total CTNS"] || 0),
-        loaded_ctns: Number(p["Loaded CTNS"] || 0),
-        cbm: Number(p.CBM || 0), gw: Number(p.GW || 0),
-        destination: p.Destination || "TATOPANI",
-        lot_no: p["LOT No"] || "",
-        date: p.Date || null,
-        client: p.Client || "",
-        remarks: p.Remarks || "",
-        created_by: userTag, updated_by: userTag,
-      })).filter((r) => r.consignment_no);
-      for (const ins of inserts) await api.overallDetails.create(ins);
-      toast.success(`Imported ${inserts.length} rows`);
+      const inserts = normalizeImportRows(parsed);
+      if (!inserts.length) { toast.error("No valid rows (missing Consignment No)"); return; }
+      let ok = 0, fail = 0;
+      for (const ins of inserts) {
+        try { await api.overallDetails.create(ins); ok++; } catch { fail++; }
+      }
+      toast.success(`Imported ${ok}${fail ? `, ${fail} failed` : ""}`);
+      setImportOpen(false); setPasteText("");
       load();
     } catch (e: any) { toast.error(e.message || "Import failed"); }
+    finally { setImportBusy(false); }
   };
+
+  const handleImportFile = async (file: File) => {
+    try {
+      const parsed = await parseExcelFile(file);
+      await runImport(parsed);
+    } catch (e: any) { toast.error(e.message || "Import failed"); }
+  };
+
+  const handleImportPaste = async () => {
+    try {
+      const parsed = parsePastedTable(pasteText);
+      await runImport(parsed);
+    } catch (e: any) { toast.error(e.message || "Parse failed"); }
+  };
+
 
   return (
     <div className="space-y-4">
