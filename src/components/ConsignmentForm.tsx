@@ -86,7 +86,7 @@ export function ConsignmentForm({ initialData, onSaved, onCancel }: { initialDat
         setTrackId("");
       }
     } else {
-      // Generate next ascending track id from existing consignments
+      // Generate next sequential track id from existing consignments
       api.consignments.list().then((list) => {
         let max = 1000;
         for (const c of list) {
@@ -96,11 +96,9 @@ export function ConsignmentForm({ initialData, onSaved, onCancel }: { initialDat
             if (!isNaN(n) && n > max) max = n;
           }
         }
-        // Add a small random increment so it stays ascending but not strictly sequential
-        const next = max + 1 + Math.floor(Math.random() * 5);
-        setTrackId(String(next));
+        setTrackId(String(max + 1));
       }).catch(() => {
-        setTrackId(String(1001 + Math.floor(Math.random() * 100)));
+        setTrackId("1001");
       });
     }
   }, [initialData]);
