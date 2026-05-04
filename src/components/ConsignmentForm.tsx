@@ -113,7 +113,7 @@ export function ConsignmentForm({ initialData, onSaved, onCancel }: { initialDat
   // Keep form.bill_no in sync
   useEffect(() => { set("bill_no", composedBillNo); }, [composedBillNo]);
 
-  const insurance = useMemo(() => Number(form.value_of_goods || 0) * 0.003, [form.value_of_goods]);
+  const insurance = useMemo(() => Math.round(Number(form.value_of_goods || 0) * 0.003), [form.value_of_goods]);
 
   const endStationData = useMemo(() => {
     const normalizedEndStation = normalizeStationName(String(form.end_station || ""));
@@ -283,7 +283,7 @@ export function ConsignmentForm({ initialData, onSaved, onCancel }: { initialDat
           </div>
           <div className="space-y-4">
             <F label="Insurance">
-              <Input type="number" value={insurance.toFixed(2)} readOnly className="bg-muted" />
+              <Input type="number" value={insurance} readOnly className="bg-muted" />
             </F>
             <F label="Unloading Fee"><Input type="number" value={form.unloading_fee} onChange={(e) => set("unloading_fee", e.target.value)} /></F>
             <F label="Payment of Goods"><Input type="number" value={form.payment_of_goods} onChange={(e) => set("payment_of_goods", e.target.value)} /></F>
