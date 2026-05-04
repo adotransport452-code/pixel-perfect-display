@@ -113,7 +113,7 @@ export function ConsignmentForm({ initialData, onSaved, onCancel }: { initialDat
   // Keep form.bill_no in sync
   useEffect(() => { set("bill_no", composedBillNo); }, [composedBillNo]);
 
-  const insurance = useMemo(() => Number(form.value_of_goods || 0) * 0.003, [form.value_of_goods]);
+  const insurance = useMemo(() => Math.round(Number(form.value_of_goods || 0) * 0.003), [form.value_of_goods]);
 
   const endStationData = useMemo(() => {
     const normalizedEndStation = normalizeStationName(String(form.end_station || ""));
