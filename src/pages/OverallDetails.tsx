@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { PageHeader } from "@/components/PageHeader";
 import { ActionButtons } from "@/components/ActionButtons";
 import { api, type OverallDetail, type DestContainer, type LhasaContainer, type OverallStatus } from "@/lib/store";
-import { exportToExcel, parseExcelFile } from "@/lib/excel";
+import { exportToExcel, parseExcelFile, parsePastedTable } from "@/lib/excel";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Plus, Search, Upload, Download, Pencil, ChevronDown, ChevronRight, X } from "lucide-react";
@@ -107,6 +107,9 @@ function OriginTable({ origin }: { origin: Origin }) {
   const [tatBulkOpen, setTatBulkOpen] = useState(false);
   const [kerBulkOpen, setKerBulkOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [pasteText, setPasteText] = useState("");
+  const [importBusy, setImportBusy] = useState(false);
 
   // Top scrollbar mirror
   const topScrollRef = useRef<HTMLDivElement>(null);
@@ -188,28 +191,72 @@ function OriginTable({ origin }: { origin: Origin }) {
     exportToExcel(flat, `overall-details-${origin.toLowerCase()}`);
   };
 
-  const handleImport = async (file: File) => {
+  const normalizeImportRows = (parsed: any[]) => {
+    const getCI = (obj: any, ...keys: string[]) => {
+      const map: Record<string, any> = {};
+      for (const k of Object.keys(obj)) map[k.toLowerCase().trim()] = obj[k];
+      for (const k of keys) {
+        const v = map[k.toLowerCase().trim()];
+        if (v !== undefined && v !== null && String(v) !== "") return v;
+      }
+      return "";
+    };
+    const toDate = (v: any) => {
+      if (!v) return null;
+      const s = String(v).trim();
+      if (!s) return null;
+      const d = new Date(s);
+      if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+      return null;
+    };
+    return parsed.map((p: any) => ({
+      ...emptyRow(origin),
+      consignment_no: String(getCI(p, "Consignment No", "consignment_no", "Consignment", "Bill No") || ""),
+      marka: String(getCI(p, "MARKA", "marka", "Brand") || ""),
+      total_ctns: Number(String(getCI(p, "Total CTNS", "total_ctns", "Total CTN")).replace(/[^\d.\-]/g, "")) || 0,
+      loaded_ctns: Number(String(getCI(p, "Loaded CTNS", "loaded_ctns", "Loaded CTN")).replace(/[^\d.\-]/g, "")) || 0,
+      cbm: Number(String(getCI(p, "CBM", "cbm")).replace(/[^\d.\-]/g, "")) || 0,
+      gw: Number(String(getCI(p, "GW", "gw", "Weight")).replace(/[^\d.\-]/g, "")) || 0,
+      destination: String(getCI(p, "Destination", "destination") || "TATOPANI"),
+      lot_no: String(getCI(p, "LOT No", "lot_no", "Lot No") || ""),
+      date: toDate(getCI(p, "Date", "date")),
+      client: String(getCI(p, "Client", "client") || ""),
+      remarks: String(getCI(p, "Remarks", "remarks") || ""),
+      created_by: userTag, updated_by: userTag,
+    })).filter((r) => r.consignment_no);
+  };
+
+  const runImport = async (parsed: any[]) => {
+    if (!parsed.length) { toast.error("No rows detected"); return; }
+    setImportBusy(true);
     try {
-      const parsed = await parseExcelFile(file);
-      const inserts = parsed.map((p: any) => ({
-        ...emptyRow(origin),
-        consignment_no: String(p["Consignment No"] || p.consignment_no || ""),
-        marka: p.MARKA || p.marka || "",
-        total_ctns: Number(p["Total CTNS"] || 0),
-        loaded_ctns: Number(p["Loaded CTNS"] || 0),
-        cbm: Number(p.CBM || 0), gw: Number(p.GW || 0),
-        destination: p.Destination || "TATOPANI",
-        lot_no: p["LOT No"] || "",
-        date: p.Date || null,
-        client: p.Client || "",
-        remarks: p.Remarks || "",
-        created_by: userTag, updated_by: userTag,
-      })).filter((r) => r.consignment_no);
-      for (const ins of inserts) await api.overallDetails.create(ins);
-      toast.success(`Imported ${inserts.length} rows`);
+      const inserts = normalizeImportRows(parsed);
+      if (!inserts.length) { toast.error("No valid rows (missing Consignment No)"); return; }
+      let ok = 0, fail = 0;
+      for (const ins of inserts) {
+        try { await api.overallDetails.create(ins); ok++; } catch { fail++; }
+      }
+      toast.success(`Imported ${ok}${fail ? `, ${fail} failed` : ""}`);
+      setImportOpen(false); setPasteText("");
       load();
     } catch (e: any) { toast.error(e.message || "Import failed"); }
+    finally { setImportBusy(false); }
   };
+
+  const handleImportFile = async (file: File) => {
+    try {
+      const parsed = await parseExcelFile(file);
+      await runImport(parsed);
+    } catch (e: any) { toast.error(e.message || "Import failed"); }
+  };
+
+  const handleImportPaste = async () => {
+    try {
+      const parsed = parsePastedTable(pasteText);
+      await runImport(parsed);
+    } catch (e: any) { toast.error(e.message || "Parse failed"); }
+  };
+
 
   return (
     <div className="space-y-4">
@@ -219,8 +266,8 @@ function OriginTable({ origin }: { origin: Origin }) {
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search consignment, MARKA, LOT, client…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 w-72" />
         </div>
-        <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImport(f); e.target.value = ""; }} />
-        <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}><Upload className="h-4 w-4 mr-1" /> Smart Import</Button>
+        <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportFile(f); e.target.value = ""; }} />
+        <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}><Upload className="h-4 w-4 mr-1" /> Smart Import</Button>
         <Button variant="outline" size="sm" onClick={handleExport}><Download className="h-4 w-4 mr-1" /> Export</Button>
         <Button size="sm" onClick={() => { setEditing(null); setEditOpen(true); }}><Plus className="h-4 w-4 mr-1" /> Add New</Button>
         <Button variant={selectMode ? "default" : "outline"} size="sm" onClick={() => { setSelectMode((v) => !v); setSelectedIds([]); }}>
@@ -492,6 +539,41 @@ function OriginTable({ origin }: { origin: Origin }) {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Smart Import dialog */}
+      <Dialog open={importOpen} onOpenChange={(o) => { if (!importBusy) { setImportOpen(o); if (!o) setPasteText(""); } }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Smart Import — {origin}</DialogTitle>
+          </DialogHeader>
+          <Tabs defaultValue="file">
+            <TabsList>
+              <TabsTrigger value="file">Upload Excel/CSV</TabsTrigger>
+              <TabsTrigger value="paste">Paste Data</TabsTrigger>
+            </TabsList>
+            <TabsContent value="file" className="mt-4 space-y-2">
+              <Label className="text-sm">Excel/CSV file</Label>
+              <Input type="file" accept=".xlsx,.xls,.csv" disabled={importBusy} onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportFile(f); e.target.value = ""; }} />
+              <p className="text-xs text-muted-foreground">Headers supported: Date, Consignment No, MARKA, Total CTNS, Loaded CTNS, CBM, GW, Destination, LOT No, Client, Remarks.</p>
+            </TabsContent>
+            <TabsContent value="paste" className="mt-4 space-y-2">
+              <Label className="text-sm">Paste rows from Excel / Google Sheets (first row = headers)</Label>
+              <Textarea
+                rows={10}
+                value={pasteText}
+                onChange={(e) => setPasteText(e.target.value)}
+                placeholder={"Date\tConsignment No\tMARKA\tTotal CTNS\tLoaded CTNS\tCBM\tGW\tDestination\tLOT No\tClient\tRemarks\n2025-01-01\tCN-001\tACME\t100\t100\t12.5\t2500\tTATOPANI\tLOT-1\tJohn\t"}
+                className="font-mono text-xs"
+              />
+              <div className="flex justify-end">
+                <Button onClick={handleImportPaste} disabled={importBusy || !pasteText.trim()}>
+                  {importBusy ? "Importing…" : "Import Pasted Data"}
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
 
       {/* Master Edit */}
       <MasterEditDialog
