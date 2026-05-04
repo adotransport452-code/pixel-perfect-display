@@ -257,6 +257,41 @@ function OriginTable({ origin }: { origin: Origin }) {
     } catch (e: any) { toast.error(e.message || "Parse failed"); }
   };
 
+      {/* Smart Import dialog */}
+      <Dialog open={importOpen} onOpenChange={(o) => { if (!importBusy) { setImportOpen(o); if (!o) setPasteText(""); } }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Smart Import — {origin}</DialogTitle>
+          </DialogHeader>
+          <Tabs defaultValue="file">
+            <TabsList>
+              <TabsTrigger value="file">Upload Excel/CSV</TabsTrigger>
+              <TabsTrigger value="paste">Paste Data</TabsTrigger>
+            </TabsList>
+            <TabsContent value="file" className="mt-4 space-y-2">
+              <Label className="text-sm">Excel/CSV file</Label>
+              <Input type="file" accept=".xlsx,.xls,.csv" disabled={importBusy} onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportFile(f); e.target.value = ""; }} />
+              <p className="text-xs text-muted-foreground">Headers supported: Date, Consignment No, MARKA, Total CTNS, Loaded CTNS, CBM, GW, Destination, LOT No, Client, Remarks.</p>
+            </TabsContent>
+            <TabsContent value="paste" className="mt-4 space-y-2">
+              <Label className="text-sm">Paste rows from Excel / Google Sheets (first row = headers)</Label>
+              <Textarea
+                rows={10}
+                value={pasteText}
+                onChange={(e) => setPasteText(e.target.value)}
+                placeholder={"Date\tConsignment No\tMARKA\tTotal CTNS\tLoaded CTNS\tCBM\tGW\tDestination\tLOT No\tClient\tRemarks\n2025-01-01\tCN-001\tACME\t100\t100\t12.5\t2500\tTATOPANI\tLOT-1\tJohn\t"}
+                className="font-mono text-xs"
+              />
+              <div className="flex justify-end">
+                <Button onClick={handleImportPaste} disabled={importBusy || !pasteText.trim()}>
+                  {importBusy ? "Importing…" : "Import Pasted Data"}
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+
 
   return (
     <div className="space-y-4">
