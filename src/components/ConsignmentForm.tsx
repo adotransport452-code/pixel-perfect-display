@@ -88,7 +88,7 @@ export function ConsignmentForm({ initialData, onSaved, onCancel }: { initialDat
     } else {
       // Generate next sequential track id from existing consignments
       api.consignments.list().then((list) => {
-        let max = 1000;
+        let max = 0;
         for (const c of list) {
           const tm = (c.bill_no || "").match(/\/(\d+)$/);
           if (tm) {
@@ -98,7 +98,7 @@ export function ConsignmentForm({ initialData, onSaved, onCancel }: { initialDat
         }
         setTrackId(String(max + 1));
       }).catch(() => {
-        setTrackId("1001");
+        setTrackId("1");
       });
     }
   }, [initialData]);
