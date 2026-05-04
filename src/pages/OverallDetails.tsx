@@ -107,6 +107,9 @@ function OriginTable({ origin }: { origin: Origin }) {
   const [tatBulkOpen, setTatBulkOpen] = useState(false);
   const [kerBulkOpen, setKerBulkOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [pasteText, setPasteText] = useState("");
+  const [importBusy, setImportBusy] = useState(false);
 
   // Top scrollbar mirror
   const topScrollRef = useRef<HTMLDivElement>(null);
