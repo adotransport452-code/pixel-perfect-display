@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { api, Shipment, Station, Consignment } from "@/lib/store";
 import { exportToExcel } from "@/lib/excel";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const STATION_OPTIONS = [
   "Guangzhou", "Yiwu", "Lhasa", "Nylam (Khasa)", "Tatopani", "Kerung",
