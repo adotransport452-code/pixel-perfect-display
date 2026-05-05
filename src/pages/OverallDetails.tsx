@@ -426,6 +426,9 @@ function MultiCell({
                   patchRow({ [key]: arr, [totalKey]: arr.length } as any);
                 };
                 const cellCls = cn("px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 whitespace-nowrap align-top", rowText);
+                const mv = (r.multi_values || {}) as Record<string, string[]>;
+                const getExtras = (k: string) => mv[k] || [];
+                const setExtras = (k: string, arr: string[]) => patchRow({ multi_values: { ...mv, [k]: arr } } as any);
                 return (
                   <tr key={r.id} className="group hover:bg-accent/30">
                     {selectMode && (
