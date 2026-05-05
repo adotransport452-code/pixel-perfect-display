@@ -28,6 +28,8 @@ const emptyForm: FormState = {
 };
 
 const DeliveryReceipts = () => {
+  const { profile } = useAuth();
+  const userTag = profile?.name || profile?.email || null;
   const [items, setItems] = useState<DeliveryReceipt[]>([]);
   const [consignments, setConsignments] = useState<Consignment[]>([]);
   const [open, setOpen] = useState(false);
