@@ -94,7 +94,7 @@ const DeliveryReceipts = () => {
         remarks: form.remarks || null,
       };
       if (editing) await api.deliveryReceipts.update(editing.id, payload);
-      else await api.deliveryReceipts.create(payload);
+      else await api.deliveryReceipts.create({ ...payload, created_by: userTag });
       toast.success("Saved"); setOpen(false); load();
     } catch (e: any) { toast.error(e.message); }
   };
