@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { api, Consignment, Station } from "@/lib/store";
+import { useAuth } from "@/contexts/AuthContext";
 
 const START_STATIONS = [
   "Guangzhou", "Yiwu", "Lhasa", "Nylam (Khasa)", "Tatopani", "Kerung",
@@ -56,6 +57,8 @@ const STATION_PREFIX: Record<string, string> = {
 };
 
 export function ConsignmentForm({ initialData, onSaved, onCancel }: { initialData?: Consignment | null; onSaved: () => void; onCancel: () => void }) {
+  const { profile } = useAuth();
+  const userTag = profile?.name || profile?.email || null;
   const [stations, setStations] = useState<Station[]>([]);
   const [tab, setTab] = useState("basic");
   const [billMiddle, setBillMiddle] = useState<string>("");
@@ -171,7 +174,7 @@ export function ConsignmentForm({ initialData, onSaved, onCancel }: { initialDat
     };
     try {
       if (initialData) { await api.consignments.update(initialData.id, payload); toast.success("Consignment updated"); }
-      else { await api.consignments.create(payload); toast.success("Consignment created"); }
+      else { await api.consignments.create({ ...payload, created_by: userTag }); toast.success("Consignment created"); }
       onSaved();
     } catch (e: any) { toast.error(e.message); }
   };

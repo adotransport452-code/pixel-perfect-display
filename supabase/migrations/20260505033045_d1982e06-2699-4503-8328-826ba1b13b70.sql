@@ -1,0 +1,1 @@
+ALTER TABLE public.overall_details ADD COLUMN IF NOT EXISTS multi_values jsonb NOT NULL DEFAULT '{}'::jsonb;

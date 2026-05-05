@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, X, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Plus, Search, X, Trash2, Download, Copy, Printer } from "lucide-react";
 import { toast } from "sonner";
+import { toPng } from "html-to-image";
 import { PageHeader } from "@/components/PageHeader";
 import { DataTable } from "@/components/DataTable";
 import { ActionButtons } from "@/components/ActionButtons";
@@ -10,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { api, Consignment, DeliveryReceipt } from "@/lib/store";
+import { useAuth } from "@/contexts/AuthContext";
 import adoLogo from "@/assets/ado-logo.png";
 
 type FormState = {
@@ -26,6 +28,8 @@ const emptyForm: FormState = {
 };
 
 const DeliveryReceipts = () => {
+  const { profile } = useAuth();
+  const userTag = profile?.name || profile?.email || null;
   const [items, setItems] = useState<DeliveryReceipt[]>([]);
   const [consignments, setConsignments] = useState<Consignment[]>([]);
   const [open, setOpen] = useState(false);
@@ -90,7 +94,7 @@ const DeliveryReceipts = () => {
         remarks: form.remarks || null,
       };
       if (editing) await api.deliveryReceipts.update(editing.id, payload);
-      else await api.deliveryReceipts.create(payload);
+      else await api.deliveryReceipts.create({ ...payload, created_by: userTag });
       toast.success("Saved"); setOpen(false); load();
     } catch (e: any) { toast.error(e.message); }
   };
@@ -280,15 +284,55 @@ const DeliveryReceipts = () => {
       </Dialog>
 
       {/* View dialog — printable receipt */}
-      <Dialog open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
-          <DialogHeader className="sr-only"><DialogTitle>Delivery Receipt</DialogTitle></DialogHeader>
-          {viewing && <ReceiptView d={viewing} consMap={consMap} />}
-        </DialogContent>
-      </Dialog>
+      <ReceiptViewDialog viewing={viewing} setViewing={setViewing} consMap={consMap} />
     </div>
   );
 };
+
+function ReceiptViewDialog({ viewing, setViewing, consMap }: {
+  viewing: DeliveryReceipt | null;
+  setViewing: (d: DeliveryReceipt | null) => void;
+  consMap: Map<string, Consignment>;
+}) {
+  const printRef = useRef<HTMLDivElement>(null);
+  const renderPng = async () => {
+    if (!printRef.current) throw new Error("Receipt not ready");
+    return await toPng(printRef.current, { pixelRatio: 2, cacheBust: true, backgroundColor: "#eaf4fa" });
+  };
+  const downloadImg = async () => {
+    try {
+      const url = await renderPng();
+      const link = document.createElement("a");
+      link.download = `delivery-receipt-${viewing?.client_name || "receipt"}.png`;
+      link.href = url; link.click();
+      toast.success("Downloaded");
+    } catch (e: any) { toast.error(e.message || "Download failed"); }
+  };
+  const copyImg = async () => {
+    try {
+      const url = await renderPng();
+      const blob = await (await fetch(url)).blob();
+      // @ts-ignore
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+      toast.success("Copied to clipboard");
+    } catch (e: any) { toast.error(e.message || "Copy failed"); }
+  };
+  return (
+    <Dialog open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
+        <DialogHeader className="sticky top-0 z-10 flex flex-row items-center justify-between gap-2 border-b border-border bg-background px-4 py-2">
+          <DialogTitle>Delivery Receipt</DialogTitle>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={copyImg}><Copy className="mr-1 h-4 w-4" />Copy</Button>
+            <Button size="sm" variant="outline" onClick={downloadImg}><Download className="mr-1 h-4 w-4" />Download</Button>
+            <Button size="sm" variant="outline" onClick={() => window.print()}><Printer className="mr-1 h-4 w-4" />Print</Button>
+          </div>
+        </DialogHeader>
+        {viewing && <div ref={printRef}><ReceiptView d={viewing} consMap={consMap} /></div>}
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function ReceiptView({ d, consMap }: { d: DeliveryReceipt; consMap: Map<string, Consignment> }) {
   const rows = (d.consignment_ids || []).map((id) => consMap.get(id)).filter(Boolean) as Consignment[];

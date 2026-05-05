@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { api, Shipment, Station, Consignment } from "@/lib/store";
 import { exportToExcel } from "@/lib/excel";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const STATION_OPTIONS = [
   "Guangzhou", "Yiwu", "Lhasa", "Nylam (Khasa)", "Tatopani", "Kerung",
@@ -34,6 +35,8 @@ const empty = {
 
 const Shipments = () => {
   const navigate = useNavigate();
+  const { profile } = useAuth();
+  const userTag = profile?.name || profile?.email || null;
   const [items, setItems] = useState<Shipment[]>([]);
   const [, setStations] = useState<Station[]>([]);
   const [consignments, setConsignments] = useState<Consignment[]>([]);
@@ -136,11 +139,13 @@ const Shipments = () => {
     setForm((f: any) => ({ ...f, consignment_ids: f.consignment_ids.filter((x: string) => x !== id) }));
 
   const save = async () => {
-    if (!form.container_name || !form.lot_no || !form.start_station || !form.end_station) return toast.error("Fill all required fields");
     try {
-      const payload = { ...form, consignment_ids: form.consignment_ids };
+      const payload: any = {
+        ...form,
+        consignment_ids: form.consignment_ids,
+      };
       if (editing) await api.shipments.update(editing.id, payload);
-      else await api.shipments.create(payload);
+      else await api.shipments.create({ ...payload, created_by: userTag });
       toast.success("Saved"); setOpen(false); load();
     } catch (e: any) { toast.error(e.message); }
   };
@@ -231,8 +236,8 @@ const Shipments = () => {
             <div className="rounded-lg border border-border bg-card p-4">
               <div className="mb-3 text-base font-semibold text-primary">Container Details</div>
               <div className="space-y-3">
-                <F label="Container Name *"><Input value={form.container_name} onChange={(e) => setForm({ ...form, container_name: e.target.value })} placeholder="eg. TLC23" /></F>
-                <F label="Container Type *">
+                <F label="Container Name"><Input value={form.container_name} onChange={(e) => setForm({ ...form, container_name: e.target.value })} placeholder="eg. TLC23" /></F>
+                <F label="Container Type">
                   <Select value={form.container_type || CLEAR} onValueChange={(v) => setForm({ ...form, container_type: v === CLEAR ? "" : v })}>
                     <SelectTrigger><SelectValue placeholder="Select container type" /></SelectTrigger>
                     <SelectContent>
@@ -287,13 +292,13 @@ const Shipments = () => {
             <div className="space-y-4">
               <div className="rounded-lg border border-border bg-card p-4">
                 <div className="mb-3 text-base font-semibold text-primary">Lot Details</div>
-                <F label="Lot No. *"><Input value={form.lot_no} onChange={(e) => setForm({ ...form, lot_no: e.target.value })} placeholder="eg. Lot23" /></F>
+                <F label="Lot No."><Input value={form.lot_no} onChange={(e) => setForm({ ...form, lot_no: e.target.value })} placeholder="eg. Lot23" /></F>
               </div>
               <div className="rounded-lg border border-border bg-card p-4">
                 <div className="mb-3 text-base font-semibold text-primary">Driver Details</div>
                 <div className="grid grid-cols-2 gap-3">
                   <F label="Driver Name"><Input value={form.driver_name} onChange={(e) => setForm({ ...form, driver_name: e.target.value })} placeholder="Driver name here…" /></F>
-                  <F label="Driver Phone *"><Input value={form.driver_phone} onChange={(e) => setForm({ ...form, driver_phone: e.target.value })} placeholder="eg. 9845508943" /></F>
+                  <F label="Driver Phone"><Input value={form.driver_phone} onChange={(e) => setForm({ ...form, driver_phone: e.target.value })} placeholder="eg. 9845508943" /></F>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">

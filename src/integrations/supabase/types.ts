@@ -250,6 +250,7 @@ export type Database = {
           loaded_ctns: number | null
           lot_no: string | null
           marka: string | null
+          multi_values: Json
           nylam_arrival_dates: Json | null
           origin: string
           origin_container: string | null
@@ -281,6 +282,7 @@ export type Database = {
           loaded_ctns?: number | null
           lot_no?: string | null
           marka?: string | null
+          multi_values?: Json
           nylam_arrival_dates?: Json | null
           origin: string
           origin_container?: string | null
@@ -312,6 +314,7 @@ export type Database = {
           loaded_ctns?: number | null
           lot_no?: string | null
           marka?: string | null
+          multi_values?: Json
           nylam_arrival_dates?: Json | null
           origin?: string
           origin_container?: string | null

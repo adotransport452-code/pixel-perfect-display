@@ -257,6 +257,55 @@ function OriginTable({ origin }: { origin: Origin }) {
     } catch (e: any) { toast.error(e.message || "Parse failed"); }
   };
 
+// ---------- MultiCell: primary value + dynamic extras stored in multi_values[key] ----------
+function MultiCell({
+  primary, extras, onChangePrimary, onChangeExtras,
+  type = "text", width = 110, options,
+}: {
+  primary: any;
+  extras: string[];
+  onChangePrimary: (v: any) => void;
+  onChangeExtras: (arr: string[]) => void;
+  type?: "text" | "number" | "date" | "select";
+  width?: number;
+  options?: string[];
+}) {
+  const renderInput = (val: any, onChange: (v: string) => void, key: string | number) => {
+    if (type === "select" && options) {
+      return (
+        <Select value={String(val || "")} onValueChange={(v) => onChange(v)}>
+          <SelectTrigger className="h-7 text-xs" style={{ width }}><SelectValue /></SelectTrigger>
+          <SelectContent>{options.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+        </Select>
+      );
+    }
+    return (
+      <Input
+        type={type}
+        value={val ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-7 text-xs"
+        style={{ width }}
+      />
+    );
+  };
+  return (
+    <div className="space-y-1">
+      {renderInput(primary, onChangePrimary, "p")}
+      {(extras || []).map((v, i) => (
+        <div key={i} className="flex items-center gap-1">
+          {renderInput(v, (nv) => { const arr = [...extras]; arr[i] = nv; onChangeExtras(arr); }, i)}
+          <button onClick={() => onChangeExtras(extras.filter((_, j) => j !== i))} className="text-destructive">
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      ))}
+      <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={() => onChangeExtras([...(extras || []), ""])}>
+        <Plus className="h-3 w-3" />
+      </Button>
+    </div>
+  );
+}
 
   return (
     <div className="space-y-4">
@@ -377,6 +426,9 @@ function OriginTable({ origin }: { origin: Origin }) {
                   patchRow({ [key]: arr, [totalKey]: arr.length } as any);
                 };
                 const cellCls = cn("px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 whitespace-nowrap align-top", rowText);
+                const mv = (r.multi_values || {}) as Record<string, string[]>;
+                const getExtras = (k: string) => mv[k] || [];
+                const setExtras = (k: string, arr: string[]) => patchRow({ multi_values: { ...mv, [k]: arr } } as any);
                 return (
                   <tr key={r.id} className="group hover:bg-accent/30">
                     {selectMode && (
@@ -388,25 +440,78 @@ function OriginTable({ origin }: { origin: Origin }) {
                     <td className={cn(cellCls, "font-semibold sticky z-10")} style={{ left: selectMode ? 40 : 0 }}>{r.consignment_no}</td>
                     <td className={cellCls}><Input value={r.marka || ""} onChange={(e) => patchRow({ marka: e.target.value })} className="h-7 text-xs w-[100px]" /></td>
                     <td className={cellCls}><Input type="number" value={r.total_ctns ?? 0} onChange={(e) => patchRow({ total_ctns: Number(e.target.value) })} className="h-7 text-xs w-[80px]" /></td>
-                    <td className={cellCls}><Input type="number" value={r.loaded_ctns ?? 0} onChange={(e) => patchRow({ loaded_ctns: Number(e.target.value) })} className="h-7 text-xs w-[80px]" /></td>
-                    <td className={cellCls}><Input type="number" step="0.01" value={r.cbm ?? 0} onChange={(e) => patchRow({ cbm: Number(e.target.value) })} className="h-7 text-xs w-[70px]" /></td>
-                    <td className={cellCls}><Input type="number" step="0.01" value={r.gw ?? 0} onChange={(e) => patchRow({ gw: Number(e.target.value) })} className="h-7 text-xs w-[70px]" /></td>
                     <td className={cellCls}>
-                      <Select value={r.destination || ""} onValueChange={(v) => patchRow({ destination: v })}>
-                        <SelectTrigger className="h-7 text-xs w-[130px]"><SelectValue /></SelectTrigger>
-                        <SelectContent>{DESTINATIONS.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-                      </Select>
+                      <MultiCell type="number" width={80}
+                        primary={r.loaded_ctns ?? 0}
+                        extras={getExtras("loaded_ctns")}
+                        onChangePrimary={(v) => patchRow({ loaded_ctns: Number(v) })}
+                        onChangeExtras={(arr) => setExtras("loaded_ctns", arr)}
+                      />
                     </td>
-                    <td className={cellCls}><Input value={r.lot_no || ""} onChange={(e) => patchRow({ lot_no: e.target.value })} className="h-7 text-xs w-[100px]" /></td>
-                    <td className={cellCls}><Input type="date" value={r.dispatched_from_origin || ""} onChange={(e) => patchRow({ dispatched_from_origin: e.target.value || null })} className="h-7 text-xs w-[140px]" /></td>
-                    <td className={cellCls}><Input value={r.origin_container || ""} onChange={(e) => patchRow({ origin_container: e.target.value })} className="h-7 text-xs w-[140px]" /></td>
                     <td className={cellCls}>
-                      <Select value={r.status || ""} onValueChange={(v) => patchRow({ status: v })}>
-                        <SelectTrigger className="h-7 text-xs w-[160px]"><SelectValue /></SelectTrigger>
-                        <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                      </Select>
+                      <MultiCell type="number" width={70}
+                        primary={r.cbm ?? 0}
+                        extras={getExtras("cbm")}
+                        onChangePrimary={(v) => patchRow({ cbm: Number(v) })}
+                        onChangeExtras={(arr) => setExtras("cbm", arr)}
+                      />
                     </td>
-                    <td className={cellCls}><Input type="date" value={r.arrival_at_lhasa || ""} onChange={(e) => patchRow({ arrival_at_lhasa: e.target.value || null })} className="h-7 text-xs w-[130px]" /></td>
+                    <td className={cellCls}>
+                      <MultiCell type="number" width={70}
+                        primary={r.gw ?? 0}
+                        extras={getExtras("gw")}
+                        onChangePrimary={(v) => patchRow({ gw: Number(v) })}
+                        onChangeExtras={(arr) => setExtras("gw", arr)}
+                      />
+                    </td>
+                    <td className={cellCls}>
+                      <MultiCell type="select" width={130} options={DESTINATIONS}
+                        primary={r.destination || ""}
+                        extras={getExtras("destination")}
+                        onChangePrimary={(v) => patchRow({ destination: v })}
+                        onChangeExtras={(arr) => setExtras("destination", arr)}
+                      />
+                    </td>
+                    <td className={cellCls}>
+                      <MultiCell width={100}
+                        primary={r.lot_no || ""}
+                        extras={getExtras("lot_no")}
+                        onChangePrimary={(v) => patchRow({ lot_no: v })}
+                        onChangeExtras={(arr) => setExtras("lot_no", arr)}
+                      />
+                    </td>
+                    <td className={cellCls}>
+                      <MultiCell type="date" width={140}
+                        primary={r.dispatched_from_origin || ""}
+                        extras={getExtras("dispatched_from_origin")}
+                        onChangePrimary={(v) => patchRow({ dispatched_from_origin: v || null })}
+                        onChangeExtras={(arr) => setExtras("dispatched_from_origin", arr)}
+                      />
+                    </td>
+                    <td className={cellCls}>
+                      <MultiCell width={140}
+                        primary={r.origin_container || ""}
+                        extras={getExtras("origin_container")}
+                        onChangePrimary={(v) => patchRow({ origin_container: v })}
+                        onChangeExtras={(arr) => setExtras("origin_container", arr)}
+                      />
+                    </td>
+                    <td className={cellCls}>
+                      <MultiCell type="select" width={160} options={STATUSES as unknown as string[]}
+                        primary={r.status || ""}
+                        extras={getExtras("status")}
+                        onChangePrimary={(v) => patchRow({ status: v })}
+                        onChangeExtras={(arr) => setExtras("status", arr)}
+                      />
+                    </td>
+                    <td className={cellCls}>
+                      <MultiCell type="date" width={130}
+                        primary={r.arrival_at_lhasa || ""}
+                        extras={getExtras("arrival_at_lhasa")}
+                        onChangePrimary={(v) => patchRow({ arrival_at_lhasa: v || null })}
+                        onChangeExtras={(arr) => setExtras("arrival_at_lhasa", arr)}
+                      />
+                    </td>
                     {/* LHASA expand & inline edit */}
                     <td className={cn("px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 align-top", rowText)}>
                       <button onClick={() => toggleExpand(expandedLhasa, setExpandedLhasa, r.id)} className="inline-flex items-center gap-1 text-primary text-xs font-semibold">
@@ -457,7 +562,14 @@ function OriginTable({ origin }: { origin: Origin }) {
                         <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => patchRow({ nylam_arrival_dates: [...(r.nylam_arrival_dates || []), ""] })}><Plus className="h-3 w-3" /></Button>
                       </div>
                     </td>
-                    <td className={cellCls}><Input type="number" value={r.received_ctns_at_nylam ?? 0} onChange={(e) => patchRow({ received_ctns_at_nylam: Number(e.target.value) })} className="h-7 text-xs w-[100px]" /></td>
+                    <td className={cellCls}>
+                      <MultiCell type="number" width={100}
+                        primary={r.received_ctns_at_nylam ?? 0}
+                        extras={getExtras("received_ctns_at_nylam")}
+                        onChangePrimary={(v) => patchRow({ received_ctns_at_nylam: Number(v) })}
+                        onChangeExtras={(arr) => setExtras("received_ctns_at_nylam", arr)}
+                      />
+                    </td>
                     {/* KERUNG expand */}
                     <td className={cn("px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 align-top", rowText)}>
                       <button onClick={() => toggleExpand(expandedKer, setExpandedKer, r.id)} className="inline-flex items-center gap-1 text-destructive text-xs font-semibold">
