@@ -35,6 +35,8 @@ const empty = {
 
 const Shipments = () => {
   const navigate = useNavigate();
+  const { profile } = useAuth();
+  const userTag = profile?.name || profile?.email || null;
   const [items, setItems] = useState<Shipment[]>([]);
   const [, setStations] = useState<Station[]>([]);
   const [consignments, setConsignments] = useState<Consignment[]>([]);
