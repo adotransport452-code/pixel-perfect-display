@@ -440,25 +440,78 @@ function MultiCell({
                     <td className={cn(cellCls, "font-semibold sticky z-10")} style={{ left: selectMode ? 40 : 0 }}>{r.consignment_no}</td>
                     <td className={cellCls}><Input value={r.marka || ""} onChange={(e) => patchRow({ marka: e.target.value })} className="h-7 text-xs w-[100px]" /></td>
                     <td className={cellCls}><Input type="number" value={r.total_ctns ?? 0} onChange={(e) => patchRow({ total_ctns: Number(e.target.value) })} className="h-7 text-xs w-[80px]" /></td>
-                    <td className={cellCls}><Input type="number" value={r.loaded_ctns ?? 0} onChange={(e) => patchRow({ loaded_ctns: Number(e.target.value) })} className="h-7 text-xs w-[80px]" /></td>
-                    <td className={cellCls}><Input type="number" step="0.01" value={r.cbm ?? 0} onChange={(e) => patchRow({ cbm: Number(e.target.value) })} className="h-7 text-xs w-[70px]" /></td>
-                    <td className={cellCls}><Input type="number" step="0.01" value={r.gw ?? 0} onChange={(e) => patchRow({ gw: Number(e.target.value) })} className="h-7 text-xs w-[70px]" /></td>
                     <td className={cellCls}>
-                      <Select value={r.destination || ""} onValueChange={(v) => patchRow({ destination: v })}>
-                        <SelectTrigger className="h-7 text-xs w-[130px]"><SelectValue /></SelectTrigger>
-                        <SelectContent>{DESTINATIONS.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-                      </Select>
+                      <MultiCell type="number" width={80}
+                        primary={r.loaded_ctns ?? 0}
+                        extras={getExtras("loaded_ctns")}
+                        onChangePrimary={(v) => patchRow({ loaded_ctns: Number(v) })}
+                        onChangeExtras={(arr) => setExtras("loaded_ctns", arr)}
+                      />
                     </td>
-                    <td className={cellCls}><Input value={r.lot_no || ""} onChange={(e) => patchRow({ lot_no: e.target.value })} className="h-7 text-xs w-[100px]" /></td>
-                    <td className={cellCls}><Input type="date" value={r.dispatched_from_origin || ""} onChange={(e) => patchRow({ dispatched_from_origin: e.target.value || null })} className="h-7 text-xs w-[140px]" /></td>
-                    <td className={cellCls}><Input value={r.origin_container || ""} onChange={(e) => patchRow({ origin_container: e.target.value })} className="h-7 text-xs w-[140px]" /></td>
                     <td className={cellCls}>
-                      <Select value={r.status || ""} onValueChange={(v) => patchRow({ status: v })}>
-                        <SelectTrigger className="h-7 text-xs w-[160px]"><SelectValue /></SelectTrigger>
-                        <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                      </Select>
+                      <MultiCell type="number" width={70}
+                        primary={r.cbm ?? 0}
+                        extras={getExtras("cbm")}
+                        onChangePrimary={(v) => patchRow({ cbm: Number(v) })}
+                        onChangeExtras={(arr) => setExtras("cbm", arr)}
+                      />
                     </td>
-                    <td className={cellCls}><Input type="date" value={r.arrival_at_lhasa || ""} onChange={(e) => patchRow({ arrival_at_lhasa: e.target.value || null })} className="h-7 text-xs w-[130px]" /></td>
+                    <td className={cellCls}>
+                      <MultiCell type="number" width={70}
+                        primary={r.gw ?? 0}
+                        extras={getExtras("gw")}
+                        onChangePrimary={(v) => patchRow({ gw: Number(v) })}
+                        onChangeExtras={(arr) => setExtras("gw", arr)}
+                      />
+                    </td>
+                    <td className={cellCls}>
+                      <MultiCell type="select" width={130} options={DESTINATIONS}
+                        primary={r.destination || ""}
+                        extras={getExtras("destination")}
+                        onChangePrimary={(v) => patchRow({ destination: v })}
+                        onChangeExtras={(arr) => setExtras("destination", arr)}
+                      />
+                    </td>
+                    <td className={cellCls}>
+                      <MultiCell width={100}
+                        primary={r.lot_no || ""}
+                        extras={getExtras("lot_no")}
+                        onChangePrimary={(v) => patchRow({ lot_no: v })}
+                        onChangeExtras={(arr) => setExtras("lot_no", arr)}
+                      />
+                    </td>
+                    <td className={cellCls}>
+                      <MultiCell type="date" width={140}
+                        primary={r.dispatched_from_origin || ""}
+                        extras={getExtras("dispatched_from_origin")}
+                        onChangePrimary={(v) => patchRow({ dispatched_from_origin: v || null })}
+                        onChangeExtras={(arr) => setExtras("dispatched_from_origin", arr)}
+                      />
+                    </td>
+                    <td className={cellCls}>
+                      <MultiCell width={140}
+                        primary={r.origin_container || ""}
+                        extras={getExtras("origin_container")}
+                        onChangePrimary={(v) => patchRow({ origin_container: v })}
+                        onChangeExtras={(arr) => setExtras("origin_container", arr)}
+                      />
+                    </td>
+                    <td className={cellCls}>
+                      <MultiCell type="select" width={160} options={STATUSES as unknown as string[]}
+                        primary={r.status || ""}
+                        extras={getExtras("status")}
+                        onChangePrimary={(v) => patchRow({ status: v })}
+                        onChangeExtras={(arr) => setExtras("status", arr)}
+                      />
+                    </td>
+                    <td className={cellCls}>
+                      <MultiCell type="date" width={130}
+                        primary={r.arrival_at_lhasa || ""}
+                        extras={getExtras("arrival_at_lhasa")}
+                        onChangePrimary={(v) => patchRow({ arrival_at_lhasa: v || null })}
+                        onChangeExtras={(arr) => setExtras("arrival_at_lhasa", arr)}
+                      />
+                    </td>
                     {/* LHASA expand & inline edit */}
                     <td className={cn("px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 align-top", rowText)}>
                       <button onClick={() => toggleExpand(expandedLhasa, setExpandedLhasa, r.id)} className="inline-flex items-center gap-1 text-primary text-xs font-semibold">
