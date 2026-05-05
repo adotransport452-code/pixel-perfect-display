@@ -562,7 +562,14 @@ function MultiCell({
                         <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => patchRow({ nylam_arrival_dates: [...(r.nylam_arrival_dates || []), ""] })}><Plus className="h-3 w-3" /></Button>
                       </div>
                     </td>
-                    <td className={cellCls}><Input type="number" value={r.received_ctns_at_nylam ?? 0} onChange={(e) => patchRow({ received_ctns_at_nylam: Number(e.target.value) })} className="h-7 text-xs w-[100px]" /></td>
+                    <td className={cellCls}>
+                      <MultiCell type="number" width={100}
+                        primary={r.received_ctns_at_nylam ?? 0}
+                        extras={getExtras("received_ctns_at_nylam")}
+                        onChangePrimary={(v) => patchRow({ received_ctns_at_nylam: Number(v) })}
+                        onChangeExtras={(arr) => setExtras("received_ctns_at_nylam", arr)}
+                      />
+                    </td>
                     {/* KERUNG expand */}
                     <td className={cn("px-3 py-2 border-t border-border/60 bg-card group-hover:bg-accent/30 align-top", rowText)}>
                       <button onClick={() => toggleExpand(expandedKer, setExpandedKer, r.id)} className="inline-flex items-center gap-1 text-destructive text-xs font-semibold">
