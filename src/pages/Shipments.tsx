@@ -140,13 +140,12 @@ const Shipments = () => {
 
   const save = async () => {
     try {
-      const payload = {
+      const payload: any = {
         ...form,
         consignment_ids: form.consignment_ids,
-        created_by: form.created_by || (window as any).__userTag || null,
       };
       if (editing) await api.shipments.update(editing.id, payload);
-      else await api.shipments.create(payload);
+      else await api.shipments.create({ ...payload, created_by: userTag });
       toast.success("Saved"); setOpen(false); load();
     } catch (e: any) { toast.error(e.message); }
   };
