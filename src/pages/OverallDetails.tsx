@@ -257,6 +257,55 @@ function OriginTable({ origin }: { origin: Origin }) {
     } catch (e: any) { toast.error(e.message || "Parse failed"); }
   };
 
+// ---------- MultiCell: primary value + dynamic extras stored in multi_values[key] ----------
+function MultiCell({
+  primary, extras, onChangePrimary, onChangeExtras,
+  type = "text", width = 110, options,
+}: {
+  primary: any;
+  extras: string[];
+  onChangePrimary: (v: any) => void;
+  onChangeExtras: (arr: string[]) => void;
+  type?: "text" | "number" | "date" | "select";
+  width?: number;
+  options?: string[];
+}) {
+  const renderInput = (val: any, onChange: (v: string) => void, key: string | number) => {
+    if (type === "select" && options) {
+      return (
+        <Select value={String(val || "")} onValueChange={(v) => onChange(v)}>
+          <SelectTrigger className="h-7 text-xs" style={{ width }}><SelectValue /></SelectTrigger>
+          <SelectContent>{options.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+        </Select>
+      );
+    }
+    return (
+      <Input
+        type={type}
+        value={val ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-7 text-xs"
+        style={{ width }}
+      />
+    );
+  };
+  return (
+    <div className="space-y-1">
+      {renderInput(primary, onChangePrimary, "p")}
+      {(extras || []).map((v, i) => (
+        <div key={i} className="flex items-center gap-1">
+          {renderInput(v, (nv) => { const arr = [...extras]; arr[i] = nv; onChangeExtras(arr); }, i)}
+          <button onClick={() => onChangeExtras(extras.filter((_, j) => j !== i))} className="text-destructive">
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      ))}
+      <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={() => onChangeExtras([...(extras || []), ""])}>
+        <Plus className="h-3 w-3" />
+      </Button>
+    </div>
+  );
+}
 
   return (
     <div className="space-y-4">
