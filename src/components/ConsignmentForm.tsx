@@ -174,7 +174,7 @@ export function ConsignmentForm({ initialData, onSaved, onCancel }: { initialDat
     };
     try {
       if (initialData) { await api.consignments.update(initialData.id, payload); toast.success("Consignment updated"); }
-      else { await api.consignments.create(payload); toast.success("Consignment created"); }
+      else { await api.consignments.create({ ...payload, created_by: userTag }); toast.success("Consignment created"); }
       onSaved();
     } catch (e: any) { toast.error(e.message); }
   };
