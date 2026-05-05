@@ -83,6 +83,7 @@ export type OverallDetail = {
   kerung_total_containers: number;
   client: string | null;
   remarks: string | null;
+  multi_values: Record<string, string[]> | null;
   created_by: string | null;
   updated_by: string | null;
   created_at: string;
