@@ -136,9 +136,12 @@ const Shipments = () => {
     setForm((f: any) => ({ ...f, consignment_ids: f.consignment_ids.filter((x: string) => x !== id) }));
 
   const save = async () => {
-    if (!form.container_name || !form.lot_no || !form.start_station || !form.end_station) return toast.error("Fill all required fields");
     try {
-      const payload = { ...form, consignment_ids: form.consignment_ids };
+      const payload = {
+        ...form,
+        consignment_ids: form.consignment_ids,
+        created_by: form.created_by || (window as any).__userTag || null,
+      };
       if (editing) await api.shipments.update(editing.id, payload);
       else await api.shipments.create(payload);
       toast.success("Saved"); setOpen(false); load();
