@@ -57,6 +57,8 @@ const STATION_PREFIX: Record<string, string> = {
 };
 
 export function ConsignmentForm({ initialData, onSaved, onCancel }: { initialData?: Consignment | null; onSaved: () => void; onCancel: () => void }) {
+  const { profile } = useAuth();
+  const userTag = profile?.name || profile?.email || null;
   const [stations, setStations] = useState<Station[]>([]);
   const [tab, setTab] = useState("basic");
   const [billMiddle, setBillMiddle] = useState<string>("");
