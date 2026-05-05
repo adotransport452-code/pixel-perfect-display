@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, X, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Plus, Search, X, Trash2, Download, Copy, Printer } from "lucide-react";
 import { toast } from "sonner";
+import { toPng } from "html-to-image";
 import { PageHeader } from "@/components/PageHeader";
 import { DataTable } from "@/components/DataTable";
 import { ActionButtons } from "@/components/ActionButtons";
@@ -10,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { api, Consignment, DeliveryReceipt } from "@/lib/store";
+import { useAuth } from "@/contexts/AuthContext";
 import adoLogo from "@/assets/ado-logo.png";
 
 type FormState = {
