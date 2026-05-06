@@ -98,14 +98,45 @@ const Shipments = () => {
     "Status": s.status, "Consignments": s.consignment_ids.length, "Dispatched By": s.dispatched_by,
     "Created By": s.created_by, "Created At": s.created_at, "Remarks": s.remarks,
   });
-  const exportSelected = () => {
+  const buildShipmentSections = (data: Shipment[]): Section[] => {
+    // Group by start_station: Guangzhou / Yiwu / Other
+    const groups: Record<string, Shipment[]> = {};
+    for (const s of data) {
+      const key = (s.start_station || "Other").trim();
+      (groups[key] = groups[key] || []).push(s);
+    }
+    const order = ["Guangzhou", "Yiwu", ...Object.keys(groups).filter((k) => k !== "Guangzhou" && k !== "Yiwu")];
+    const sections: Section[] = [];
+    for (const k of order) {
+      const list = groups[k]; if (!list?.length) continue;
+      const today = new Date().toISOString().slice(0, 10);
+      const tel = "+977 9851067385 / +8613322519322";
+      // Build header rows
+      const titleText = `${k} Station Loading List`;
+      // Use first shipment's container details as the section banner info
+      const first = list[0];
+      const meta = `Lot No: ${first.lot_no}    Container Name: ${first.container_name}    Container Type: ${first.container_type || ""}    TEL: ${tel}    Date: ${today}`;
+      const objs = list.map(shipmentRow);
+      const headers = Object.keys(objs[0]);
+      const rows = objs.map((o) => headers.map((h) => (o as any)[h]));
+      sections.push({
+        titles: [
+          { text: titleText, fill: "blue", height: 28 },
+          { text: meta, fill: "green", height: 24 },
+        ],
+        headers, rows,
+      });
+    }
+    return sections;
+  };
+  const exportSelected = async () => {
     const rows = items.filter((s) => selectedIds.includes(s.id));
     if (!rows.length) return toast.error("Select at least one shipment");
-    exportToExcel(rows.map(shipmentRow), `shipments-selected-${new Date().toISOString().slice(0,10)}.xlsx`);
+    await exportStyledExcel({ filename: `shipments-selected-${new Date().toISOString().slice(0,10)}.xlsx`, sheetName: "Shipments", sections: buildShipmentSections(rows) });
   };
-  const exportAll = () => {
+  const exportAll = async () => {
     if (!items.length) return toast.error("Nothing to export");
-    exportToExcel(items.map(shipmentRow), `shipments-all-${new Date().toISOString().slice(0,10)}.xlsx`);
+    await exportStyledExcel({ filename: `shipments-all-${new Date().toISOString().slice(0,10)}.xlsx`, sheetName: "Shipments", sections: buildShipmentSections(items) });
   };
 
   const possibleConsignments = useMemo(() => {
