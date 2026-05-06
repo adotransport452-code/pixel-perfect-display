@@ -34,73 +34,84 @@ const BORDER: Partial<ExcelJS.Borders> = {
   bottom: { style: "thin", color: { argb: "FFBFBFBF" } },
 };
 
-export type ExtraTitle = { text: string; fill?: "green" | "none"; height?: number };
+export type ExtraTitle = { text: string; fill?: "green" | "blue" | "none"; height?: number; color?: string };
+export type Section = { titles?: ExtraTitle[]; headers: string[]; rows: (string | number | null | undefined)[][] };
 
 export async function exportStyledExcel(opts: {
   filename: string;
   sheetName?: string;
-  headers: string[];
-  rows: (string | number | null | undefined)[][];
-  extraTitles?: ExtraTitle[]; // additional merged rows between header image and table headers
+  headers?: string[];
+  rows?: (string | number | null | undefined)[][];
+  extraTitles?: ExtraTitle[];
+  sections?: Section[];
 }) {
-  const { filename, sheetName = "Sheet1", headers, rows, extraTitles = [] } = opts;
+  const { filename, sheetName = "Sheet1" } = opts;
+  const sections: Section[] = opts.sections
+    ? opts.sections
+    : [{ titles: opts.extraTitles || [], headers: opts.headers || [], rows: opts.rows || [] }];
+
   const wb = new ExcelJS.Workbook();
-  const ws = wb.addWorksheet(sheetName, { views: [{ state: "frozen", ySplit: HEADER_ROWS }] });
+  const ws = wb.addWorksheet(sheetName);
 
-  // Reserve column count
-  const colCount = Math.max(headers.length, 1);
-  ws.columns = headers.map((h) => ({ header: "", key: h, width: Math.max(14, Math.min(32, h.length + 6)) }));
+  // Determine widest header set for columns
+  const colCount = Math.max(1, ...sections.map((s) => s.headers.length));
+  const widthsByIdx: number[] = [];
+  for (const s of sections) s.headers.forEach((h, i) => {
+    widthsByIdx[i] = Math.max(widthsByIdx[i] || 14, Math.min(32, h.length + 6));
+  });
+  ws.columns = Array.from({ length: colCount }, (_, i) => ({ header: "", width: widthsByIdx[i] || 16 }));
 
-  // Add image spanning first HEADER_ROWS rows
+  // Header image
   const b64 = await loadHeaderBase64();
   const imgId = wb.addImage({ base64: b64, extension: "png" });
-  // Make first rows shorter to fit logo properly
   for (let r = 1; r <= HEADER_ROWS; r++) ws.getRow(r).height = 16;
   ws.addImage(imgId, {
     tl: { col: 0, row: 0 } as any,
     br: { col: colCount, row: HEADER_ROWS } as any,
     editAs: "oneCell",
   });
-  // Merge header banner area
   ws.mergeCells(1, 1, HEADER_ROWS, colCount);
 
   let curRow = HEADER_ROWS + 1;
 
-  // Extra title rows
-  for (const t of extraTitles) {
-    ws.mergeCells(curRow, 1, curRow, colCount);
-    const cell = ws.getCell(curRow, 1);
-    cell.value = t.text;
-    cell.alignment = { horizontal: "center", vertical: "middle" };
-    cell.font = { bold: true, size: 13, color: { argb: "FFFFFFFF" } };
-    if (t.fill === "green") cell.fill = GREEN_FILL;
-    cell.border = BORDER;
-    ws.getRow(curRow).height = t.height ?? 24;
-    curRow++;
-  }
-
-  // Header row (blue, bold, centered)
-  const headerRow = ws.getRow(curRow);
-  headers.forEach((h, i) => {
-    const cell = headerRow.getCell(i + 1);
-    cell.value = h;
-    cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
-    cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
-    cell.fill = HEADER_FILL;
-    cell.border = BORDER;
-  });
-  headerRow.height = 26;
-  curRow++;
-
-  // Data rows
-  for (const r of rows) {
-    const row = ws.getRow(curRow);
-    for (let i = 0; i < headers.length; i++) {
-      const cell = row.getCell(i + 1);
-      cell.value = (r[i] ?? "") as any;
-      cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+  for (const sec of sections) {
+    for (const t of sec.titles || []) {
+      ws.mergeCells(curRow, 1, curRow, colCount);
+      const cell = ws.getCell(curRow, 1);
+      cell.value = t.text;
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.font = { bold: true, size: 13, color: { argb: t.color || "FFFFFFFF" } };
+      if (t.fill === "green") cell.fill = GREEN_FILL;
+      else if (t.fill === "blue") cell.fill = HEADER_FILL;
+      else cell.font = { bold: true, size: 13, color: { argb: "FF111111" } };
       cell.border = BORDER;
+      ws.getRow(curRow).height = t.height ?? 24;
+      curRow++;
     }
+
+    const headerRow = ws.getRow(curRow);
+    sec.headers.forEach((h, i) => {
+      const cell = headerRow.getCell(i + 1);
+      cell.value = h;
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
+      cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+      cell.fill = HEADER_FILL;
+      cell.border = BORDER;
+    });
+    headerRow.height = 26;
+    curRow++;
+
+    for (const r of sec.rows) {
+      const row = ws.getRow(curRow);
+      for (let i = 0; i < sec.headers.length; i++) {
+        const cell = row.getCell(i + 1);
+        cell.value = (r[i] ?? "") as any;
+        cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+        cell.border = BORDER;
+      }
+      curRow++;
+    }
+    // spacer row between sections
     curRow++;
   }
 
