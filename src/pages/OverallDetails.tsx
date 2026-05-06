@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { PageHeader } from "@/components/PageHeader";
 import { ActionButtons } from "@/components/ActionButtons";
 import { api, type OverallDetail, type DestContainer, type LhasaContainer, type OverallStatus } from "@/lib/store";
-import { exportToExcel, parseExcelFile, parsePastedTable } from "@/lib/excel";
+import { parseExcelFile, parsePastedTable } from "@/lib/excel";
+import { exportStyledExcel, objectsToTable } from "@/lib/excelExport";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Plus, Search, Upload, Download, Pencil, ChevronDown, ChevronRight, X } from "lucide-react";
