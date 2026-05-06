@@ -15,7 +15,7 @@ import { ConsignmentForm } from "@/components/ConsignmentForm";
 import { ConsignmentReceipt } from "@/components/ConsignmentReceipt";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { ImportConsignments } from "@/components/ImportConsignments";
-import { exportToExcel } from "@/lib/excel";
+import { exportStyledExcel, objectsToTable } from "@/lib/excelExport";
 import { api, Consignment } from "@/lib/store";
 
 const ALL = "__all__";
