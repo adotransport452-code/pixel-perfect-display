@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { api, Shipment, Station, Consignment } from "@/lib/store";
-import { exportToExcel } from "@/lib/excel";
+import { exportStyledExcel, type Section } from "@/lib/excelExport";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
