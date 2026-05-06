@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ConsignmentForm } from "@/components/ConsignmentForm";
 import { ConsignmentReceipt } from "@/components/ConsignmentReceipt";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { exportToExcel } from "@/lib/excel";
+import { exportStyledExcel, objectsToTable } from "@/lib/excelExport";
 import { api, Shipment, Consignment } from "@/lib/store";
 
 const ShipmentDetails = () => {
