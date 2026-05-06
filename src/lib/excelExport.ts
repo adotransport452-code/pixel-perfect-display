@@ -57,8 +57,8 @@ export async function exportStyledExcel(opts: {
   // Make first rows shorter to fit logo properly
   for (let r = 1; r <= HEADER_ROWS; r++) ws.getRow(r).height = 16;
   ws.addImage(imgId, {
-    tl: { col: 0, row: 0 },
-    br: { col: colCount, row: HEADER_ROWS },
+    tl: { col: 0, row: 0 } as any,
+    br: { col: colCount, row: HEADER_ROWS } as any,
     editAs: "oneCell",
   });
   // Merge header banner area
