@@ -15,7 +15,7 @@ import { ConsignmentForm } from "@/components/ConsignmentForm";
 import { ConsignmentReceipt } from "@/components/ConsignmentReceipt";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { ImportConsignments } from "@/components/ImportConsignments";
-import { exportToExcel } from "@/lib/excel";
+import { exportStyledExcel, objectsToTable } from "@/lib/excelExport";
 import { api, Consignment } from "@/lib/store";
 
 const ALL = "__all__";
@@ -148,18 +148,23 @@ const Consignments = () => {
   const toggleRow = (id: string) => setSelectedIds((s) => s.includes(id) ? s.filter((x) => x !== id) : [...s, id]);
   const toggleAll = (checked: boolean) => setSelectedIds(checked ? filtered.map((c) => c.id) : []);
 
+  const doExport = async (data: Consignment[], name: string) => {
+    const objs = data.map(consignmentToExportRow);
+    const { headers, rows } = objectsToTable(objs);
+    await exportStyledExcel({ filename: name, sheetName: "Consignments", headers, rows });
+  };
   const exportSelected = () => {
     const rows = items.filter((c) => selectedIds.includes(c.id));
     if (!rows.length) return toast.error("Select at least one row");
-    exportToExcel(rows.map(consignmentToExportRow), `consignments-selected-${new Date().toISOString().slice(0,10)}.xlsx`);
+    doExport(rows, `consignments-selected-${new Date().toISOString().slice(0,10)}.xlsx`);
   };
   const exportFiltered = () => {
     if (!filtered.length) return toast.error("Nothing to export");
-    exportToExcel(filtered.map(consignmentToExportRow), `consignments-filtered-${new Date().toISOString().slice(0,10)}.xlsx`);
+    doExport(filtered, `consignments-filtered-${new Date().toISOString().slice(0,10)}.xlsx`);
   };
   const exportAll = () => {
     if (!items.length) return toast.error("Nothing to export");
-    exportToExcel(items.map(consignmentToExportRow), `consignments-all-${new Date().toISOString().slice(0,10)}.xlsx`);
+    doExport(items, `consignments-all-${new Date().toISOString().slice(0,10)}.xlsx`);
   };
 
   return (

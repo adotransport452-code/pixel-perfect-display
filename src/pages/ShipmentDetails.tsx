@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ConsignmentForm } from "@/components/ConsignmentForm";
 import { ConsignmentReceipt } from "@/components/ConsignmentReceipt";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { exportToExcel } from "@/lib/excel";
+import { exportStyledExcel, objectsToTable } from "@/lib/excelExport";
 import { api, Shipment, Consignment } from "@/lib/store";
 
 const ShipmentDetails = () => {
@@ -76,7 +76,22 @@ const ShipmentDetails = () => {
       "Other Charges": Number(c.packaging_fee || 0) + Number(c.loading_fee || 0) + Number(c.unloading_fee || 0),
       Tax: Number(c.tax || 0), Total: Number(c.grand_total || 0), Remarks: c.remarks,
     }));
-    exportToExcel(rows, `shipment-${shipment?.lot_no}-consignments-${new Date().toISOString().slice(0,10)}.xlsx`);
+    const { headers, rows: outRows } = objectsToTable(rows);
+    const station = (shipment?.start_station || "").trim();
+    const titleText = station === "Yiwu" ? "Yiwu Station Loading List" : station === "Guangzhou" ? "Guangzhou Station Loading List" : `${station || "Shipment"} Loading List`;
+    const today = new Date().toISOString().slice(0, 10);
+    const meta = `Lot No: ${shipment?.lot_no || ""}    Container Name: ${shipment?.container_name || ""}    Container Type: ${shipment?.container_type || ""}    TEL: +977 9851067385 / +8613322519322    Date: ${today}`;
+    exportStyledExcel({
+      filename: `shipment-${shipment?.lot_no}-consignments-${today}.xlsx`,
+      sheetName: "Shipment",
+      sections: [{
+        titles: [
+          { text: titleText, fill: "blue", height: 28 },
+          { text: meta, fill: "green", height: 24 },
+        ],
+        headers, rows: outRows,
+      }],
+    });
   };
 
   const removeConsignmentRecord = async (c: Consignment) => {

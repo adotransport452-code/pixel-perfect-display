@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { api, Client } from "@/lib/store";
 import { useAuth } from "@/contexts/AuthContext";
-import { exportToExcel } from "@/lib/excel";
+import { exportStyledExcel, objectsToTable } from "@/lib/excelExport";
 
 const empty = { name: "", phone: "", address: "" };
 
@@ -73,7 +73,8 @@ const Clients = () => {
   const exportSelected = () => exportAll();
   const exportAll = () => {
     if (!items.length) return toast.error("Nothing to export");
-    exportToExcel(items.map(clientRow), `clients-${new Date().toISOString().slice(0,10)}.xlsx`);
+    const { headers, rows } = objectsToTable(items.map(clientRow));
+    exportStyledExcel({ filename: `clients-${new Date().toISOString().slice(0,10)}.xlsx`, sheetName: "Clients", headers, rows });
   };
 
   return (
