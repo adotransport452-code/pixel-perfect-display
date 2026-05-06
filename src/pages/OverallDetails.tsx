@@ -189,7 +189,8 @@ function OriginTable({ origin }: { origin: Origin }) {
       Client: r.client, Remarks: r.remarks, "Created By": r.created_by, "Updated By": r.updated_by,
       "Last Modified": r.updated_at,
     }));
-    exportToExcel(flat, `overall-details-${origin.toLowerCase()}`);
+    const { headers, rows } = objectsToTable(flat);
+    exportStyledExcel({ filename: `overall-details-${origin.toLowerCase()}`, sheetName: "Overall Details", headers, rows });
   };
 
   const normalizeImportRows = (parsed: any[]) => {
