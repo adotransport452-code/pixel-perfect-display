@@ -50,14 +50,18 @@ const Stations = () => {
   const toggleRow = (id: string) => setSelectedIds((s) => s.includes(id) ? s.filter((x) => x !== id) : [...s, id]);
   const toggleAll = (checked: boolean) => setSelectedIds(checked ? filtered.map((s) => s.id) : []);
   const stationRow = (s: Station) => ({ Name: s.name, Code: s.code, Phone: s.phone, Location: s.location, "CBM Rate": s.cbm_rate, "Weight Rate": s.weight_rate, Created: s.created_at });
+  const doExport = (data: Station[], name: string) => {
+    const { headers, rows } = objectsToTable(data.map(stationRow));
+    exportStyledExcel({ filename: name, sheetName: "Stations", headers, rows });
+  };
   const exportSelected = () => {
     const rows = items.filter((s) => selectedIds.includes(s.id));
     if (!rows.length) return toast.error("Select at least one station");
-    exportToExcel(rows.map(stationRow), `stations-selected-${new Date().toISOString().slice(0,10)}.xlsx`);
+    doExport(rows, `stations-selected-${new Date().toISOString().slice(0,10)}.xlsx`);
   };
   const exportAll = () => {
     if (!items.length) return toast.error("Nothing to export");
-    exportToExcel(items.map(stationRow), `stations-all-${new Date().toISOString().slice(0,10)}.xlsx`);
+    doExport(items, `stations-all-${new Date().toISOString().slice(0,10)}.xlsx`);
   };
 
   return (
