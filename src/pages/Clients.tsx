@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { api, Client } from "@/lib/store";
 import { useAuth } from "@/contexts/AuthContext";
-import { exportToExcel } from "@/lib/excel";
+import { exportStyledExcel, objectsToTable } from "@/lib/excelExport";
 
 const empty = { name: "", phone: "", address: "" };
 
